@@ -1,0 +1,3 @@
+include *.txt *.ini *.in
+recursive-include sso *.ico *.png *.css *.gif *.jpg *.jinja2 *.pt *.txt *.mak *.mako *.js *.html *.xml
+recursive-include gateway *.ico *.png *.css *.gif *.jpg *.jinja2 *.pt *.txt *.mak *.mako *.js *.html *.xml
