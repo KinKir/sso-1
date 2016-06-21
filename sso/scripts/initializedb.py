@@ -8,9 +8,10 @@ from pyramid.paster import (
     )
 from pyramid.scripts.common import parse_vars
 
-from db.models import Base
-from db.models import MyModel
-from db.models import (
+from sso.db.models.meta import Base
+
+from sso.db.models import MyModel
+from sso.db.models import (
     get_engine,
     get_session_factory,
     get_tm_session,

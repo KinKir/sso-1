@@ -1,6 +1,6 @@
 from pyramid.config import Configurator
 
-from db import models
+from sso.db import models
 
 
 def main(global_config, **settings):

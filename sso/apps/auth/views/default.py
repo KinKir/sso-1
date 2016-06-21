@@ -2,7 +2,7 @@ from pyramid.response import Response
 from pyramid.view import view_config
 from sqlalchemy.exc import DBAPIError
 
-from db.models import MyModel
+from sso.db.models import MyModel
 
 
 @view_config(route_name='home', renderer='../templates/mytemplate.jinja2')

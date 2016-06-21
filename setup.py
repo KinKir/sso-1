@@ -18,7 +18,8 @@ requires = [
     'zope.sqlalchemy',
     'waitress',
     'uwsgi',
-    'cryptography'
+    'cryptography',
+    'Paste'
     ]
 
 tests_require = [
