@@ -1,9 +1,9 @@
 
-IV_LENGTH = 2
+IV_LENGTH = 32
 
-TAG_LENGTH = 2
+TAG_LENGTH = 16
 
-KEYID_LENGTH = 2
+KEYID_LENGTH = 16
 
 
 def pack(iv, ciphertext, tag, aad, keyid):
