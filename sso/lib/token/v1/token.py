@@ -5,6 +5,8 @@ from sso.lib.token.v1.cryptor import encrypt, decrypt
 
 import uuid
 
+import hashlib
+
 TOKEN_TYPE_MOBILE = 1
 
 TOKEN_TYPE_WEB = 2
@@ -20,8 +22,8 @@ class Token(TokenInterface):
     client_id_length = 16
     mobile_client_id_length = 16
     user_session_id_length = 16
-    client_secret_hash_length = 16
-    mobile_client_secret_hash_length = 16
+    client_secret_hash_length = 32
+    mobile_client_secret_hash_length = 32
     issued_at_length = 8
     expires_at_length = 8
     impersonation_info_length = 1
@@ -129,14 +131,17 @@ class Token(TokenInterface):
         packed = pack(iv, ciphertext, tag, None, keyid.bytes)
         return encode(packed)
 
+    @classmethod
+    def generate_client_secret_hash(cls, secret):
+        sha = hashlib.sha256()
+        sha.update(secret.encode(encoding='utf-8', errors='strict'))
+        return sha.digest()
 
-    @staticmethod
-    def generate_client_secret_hash(secret):
-        pass
-
-    @staticmethod
-    def generate_mobile_client_secret_hash(secret):
-        pass
+    @classmethod
+    def generate_mobile_client_secret_hash(cls, secret):
+        sha = hashlib.sha256()
+        sha.update(secret.encode(encoding='utf-8', errors='strict'))
+        return sha.digest()
 
     # Organization id getter and setter
     @property

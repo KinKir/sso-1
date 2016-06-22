@@ -14,14 +14,14 @@ class TokenInterface(metaclass=ABCMeta):
     def serialize(cls, token, keyid, key_retrieval_func):
         pass
 
-    @staticmethod
+    @classmethod
     @abstractmethod
-    def generate_client_secret_hash(secret):
+    def generate_client_secret_hash(cls, secret):
         pass
 
-    @staticmethod
+    @classmethod
     @abstractmethod
-    def generate_mobile_client_secret_hash(secret):
+    def generate_mobile_client_secret_hash(cls, secret):
         pass
 
     # Organization id getter and setter
