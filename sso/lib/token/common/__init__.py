@@ -4,14 +4,14 @@ from abc import (
 
 
 class TokenInterface(metaclass=ABCMeta):
-    @staticmethod
+    @classmethod
     @abstractmethod
-    def decode(s, key_retrieval_func):
+    def deserialize(cls, s, key_retrieval_func):
         pass
 
-    @staticmethod
+    @classmethod
     @abstractmethod
-    def encode(token, keyid, key_retrieval_func):
+    def serialize(cls, token, keyid, key_retrieval_func):
         pass
 
     @staticmethod
@@ -113,12 +113,12 @@ class TokenInterface(metaclass=ABCMeta):
     # is impersonated getter and setter
     @property
     @abstractmethod
-    def is_impersonated(self):
+    def impersonation_info(self):
         pass
 
-    @is_impersonated.setter
+    @impersonation_info.setter
     @abstractmethod
-    def is_impersonated(self, impersonated):
+    def impersonation_info(self, info):
         pass
 
     # issued at getter and setter

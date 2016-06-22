@@ -1,15 +1,134 @@
 from sso.lib.token.common import TokenInterface
+from sso.lib.token.v1.packer import pack, unpack
+from sso.lib.token.v1.coder import encode, decode
+from sso.lib.token.v1.cryptor import encrypt, decrypt
+
+import uuid
+
+TOKEN_TYPE_MOBILE = 1
+
+TOKEN_TYPE_WEB = 2
+
+TOKEN_IMPERSONATION_IS_IMPERSONATED = 1
 
 
 class Token(TokenInterface):
 
-    @staticmethod
-    def decode(s, key_retrieval_func):
-        pass
+    # Field order and their respective size
+    organization_id_length = 16
+    user_id_length = 16
+    client_id_length = 16
+    mobile_client_id_length = 16
+    user_session_id_length = 16
+    client_secret_hash_length = 16
+    mobile_client_secret_hash_length = 16
+    issued_at_length = 8
+    expires_at_length = 8
+    impersonation_info_length = 1
+    token_type_length = 1
 
-    @staticmethod
-    def encode(token, keyid, key_retrieval_func):
-        pass
+    @classmethod
+    def _tobin(cls, token):
+        bytes_wrote = 0
+
+        bin_token = bytearray(cls.organization_id_length + cls.user_id_length+cls.client_id_length +
+                              cls.mobile_client_id_length+cls.user_session_id_length+cls.client_secret_hash_length +
+                              cls.mobile_client_secret_hash_length+cls.issued_at_length+cls.expires_at_length +
+                              cls.impersonation_info_length+cls.token_type_length)
+
+        bin_token[bytes_wrote:bytes_wrote+cls.organization_id_length] = token.organization_id.bytes
+        bytes_wrote += cls.organization_id_length
+
+        bin_token[bytes_wrote:bytes_wrote + cls.user_id_length] = token.user_id.bytes
+        bytes_wrote += cls.user_id_length
+
+        bin_token[bytes_wrote:bytes_wrote+cls.client_id_length] = token.client_id.bytes
+        bytes_wrote += cls.client_id_length
+
+        bin_token[bytes_wrote:bytes_wrote+cls.mobile_client_id_length] = token.mobile_client_id.bytes
+        bytes_wrote += cls.mobile_client_id_length
+
+        bin_token[bytes_wrote:bytes_wrote+cls.user_session_id_length] = token.user_session_id.bytes
+        bytes_wrote += cls.user_session_id_length
+
+        bin_token[bytes_wrote:bytes_wrote+cls.client_secret_hash_length] = token.client_secret_hash
+        bytes_wrote += cls.client_secret_hash_length
+
+        bin_token[bytes_wrote:bytes_wrote+cls.mobile_client_secret_hash_length] = token.mobile_client_secret_hash
+        bytes_wrote += cls.mobile_client_secret_hash_length
+
+        bin_token[bytes_wrote:bytes_wrote+cls.issued_at_length] = token.issued_at.to_bytes(cls.issued_at_length, 'big')
+        bytes_wrote += cls.issued_at_length
+
+        bin_token[bytes_wrote:bytes_wrote+cls.expires_at_length] = \
+            token.expires_at.to_bytes(cls.expires_at_length, 'big')
+        bytes_wrote += cls.expires_at_length
+
+        bin_token[bytes_wrote:bytes_wrote+cls.impersonation_info_length] = token.impersonation_info
+        bytes_wrote += cls.impersonation_info_length
+
+        bin_token[bytes_wrote:bytes_wrote+cls.token_type_length] = token.token_type
+        bytes_wrote += cls.token_type_length
+
+        return bin_token
+
+    @classmethod
+    def _parse(cls, plaintext):
+        obj = cls()
+        bytes_read = 0
+
+        obj.organization_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read+cls.organization_id_length])
+        bytes_read += cls.organization_id_length
+
+        obj.user_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read+cls.user_id_length])
+        bytes_read += cls.user_id_length
+
+        obj.client_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read+cls.client_id_length])
+        bytes_read += cls.client_id_length
+
+        obj.mobile_client_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read+cls.mobile_client_id_length])
+        bytes_read += cls.mobile_client_id_length
+
+        obj.user_session_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read+cls.user_session_id_length])
+        bytes_read += cls.user_session_id_length
+
+        obj.client_secret_hash = plaintext[bytes_read:bytes_read+cls.client_secret_hash_length]
+        bytes_read += cls.client_secret_hash_length
+
+        obj.mobile_client_secret_hash = plaintext[bytes_read:bytes_read+cls.mobile_client_secret_hash_length]
+        bytes_read += cls.mobile_client_secret_hash_length
+
+        obj.issued_at = int.from_bytes(plaintext[bytes_read:bytes_read+cls.issued_at_length], 'big')
+        bytes_read += cls.issued_at_length
+
+        obj.expires_at = int.from_bytes(plaintext[bytes_read:bytes_read+cls.expires_at_length], 'big')
+        bytes_read += cls.expires_at_length
+
+        obj.impersonation_info = plaintext[bytes_read:bytes_read+cls.impersonation_info_length]
+        bytes_read += cls.impersonation_info_length
+
+        obj.token_type = plaintext[bytes_read:bytes_read+cls.token_type_length]
+        bytes_read += cls.token_type_length
+
+        return obj
+
+    @classmethod
+    def deserialize(cls, s, key_retrieval_func):
+        binary_data = decode(s)
+        iv, tag, keyid_bytes, aad, ciphertext, _ = unpack(binary_data)
+        keyid = uuid.UUID(bytes=keyid_bytes)
+        key = key_retrieval_func(keyid)
+        plaintext = decrypt(key, aad, iv, ciphertext, tag)
+        return cls._parse(plaintext)
+
+    @classmethod
+    def serialize(cls, token, keyid, key_retrieval_func):
+        key = key_retrieval_func(keyid)
+        plaintext = cls._tobin(token)
+        iv, ciphertext, tag = encrypt(key, plaintext, None)
+        packed = pack(iv, ciphertext, tag, None, keyid.bytes)
+        return encode(packed)
+
 
     @staticmethod
     def generate_client_secret_hash(secret):
@@ -93,11 +212,11 @@ class Token(TokenInterface):
 
     # is impersonated getter and setter
     @property
-    def is_impersonated(self):
+    def impersonation_info(self):
         pass
 
-    @is_impersonated.setter
-    def is_impersonated(self, impersonated):
+    @impersonation_info.setter
+    def impersonation_info(self, info):
         pass
 
     # issued at getter and setter
@@ -134,7 +253,7 @@ class Token(TokenInterface):
             'client_secret_hash': self.client_secret_hash,
             'mobile_client_secret_hash': self.mobile_client_secret_hash,
 
-            'is_impersonated': self.is_impersonated,
+            'impersonation_info': self.impersonation_info,
             'issued_at': self.issued_at,
             'expired_at': self.expires_at,
 
