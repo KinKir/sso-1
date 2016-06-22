@@ -11,6 +11,7 @@ from .mymodel import MyModel # flake8: noqa
 # all relationships can be setup
 configure_mappers()
 
+
 def get_engine(settings, prefix='sqlalchemy.'):
     return engine_from_config(settings, prefix)
 
