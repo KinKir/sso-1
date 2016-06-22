@@ -4,11 +4,11 @@ from sso.lib.token.common import TokenInterface
 class Token(TokenInterface):
 
     @staticmethod
-    def decode(s):
+    def decode(s, key_retrieval_func):
         pass
 
     @staticmethod
-    def encode(token):
+    def encode(token, keyid, key_retrieval_func):
         pass
 
     @staticmethod

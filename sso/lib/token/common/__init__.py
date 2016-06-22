@@ -6,12 +6,12 @@ from abc import (
 class TokenInterface(metaclass=ABCMeta):
     @staticmethod
     @abstractmethod
-    def decode(s):
+    def decode(s, key_retrieval_func):
         pass
 
     @staticmethod
     @abstractmethod
-    def encode(token):
+    def encode(token, keyid, key_retrieval_func):
         pass
 
     @staticmethod
