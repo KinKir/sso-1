@@ -1,6 +1,8 @@
 import os
 import sys
 
+import uuid
+
 import transaction
 from pyramid.paster import (
     get_appsettings,
@@ -41,5 +43,5 @@ def main(argv=sys.argv):
     with transaction.manager:
         dbsession = get_tm_session(session_factory, transaction.manager)
 
-        model = MyModel(name='one', value=1)
+        model = MyModel(name='one', value=1, extra=uuid.uuid4())
         dbsession.add(model)
