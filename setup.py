@@ -19,7 +19,8 @@ requires = [
     'waitress',
     'uwsgi',
     'cryptography',
-    'Paste'
+    'Paste',
+    'ujson'
     ]
 
 tests_require = [
