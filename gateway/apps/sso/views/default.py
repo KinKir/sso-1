@@ -2,7 +2,7 @@ from pyramid.response import Response
 from pyramid.view import view_config
 from sqlalchemy.exc import DBAPIError
 
-from sso.db.models import MyModel
+from gateway.db.models import MyModel
 
 
 @view_config(route_name='home', renderer='../templates/mytemplate.jinja2')
@@ -12,7 +12,7 @@ def my_view(request):
         one = query.filter(MyModel.name == 'one').first()
     except DBAPIError:
         return Response(db_err_msg, content_type='text/plain', status=500)
-    return {'one': one, 'project': 'sso'}
+    return {'one': one, 'project': 'gateway'}
 
 
 db_err_msg = """\

@@ -5,7 +5,7 @@ from sqlalchemy import (
     Text,
 )
 
-from sso.db.utils.guid import GUID
+from gateway.db.utils.guid import GUID
 
 from .meta import Base
 

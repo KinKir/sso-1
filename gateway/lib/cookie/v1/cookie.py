@@ -1,6 +1,6 @@
-from sso.lib.cookie.v1.packer import pack, unpack
-from sso.lib.cookie.v1.coder import encode, decode
-from sso.lib.cookie.v1.cryptor import encrypt, decrypt
+from gateway.lib.cookie.v1.packer import pack, unpack
+from gateway.lib.cookie.v1.coder import encode, decode
+from gateway.lib.cookie.v1.cryptor import encrypt, decrypt
 
 import uuid
 

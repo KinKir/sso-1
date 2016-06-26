@@ -29,9 +29,9 @@ tests_require = [
     'pytest-cov',
     ]
 
-setup(name='sso',
+setup(name='gateway',
       version='0.0',
-      description='sso',
+      description='gateway',
       long_description='',
       classifiers=[
           "Programming Language :: Python",
@@ -52,10 +52,10 @@ setup(name='sso',
       install_requires=requires,
       entry_points="""\
   [paste.app_factory]
-  sso = sso.apps.auth:main
-  gateway = sso.apps.gateway:main
-  providers = sso.apps.providers:main
+  sso = gateway.apps.sso:main
+  services = gateway.apps.services:main
+  providers = gateway.apps.providers:main
   [console_scripts]
-  initialize_sso_db = sso.scripts.initializedb:main
+  initialize_gateway_db = gateway.scripts.initializedb:main
   """,
       )

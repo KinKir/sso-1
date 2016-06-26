@@ -10,10 +10,10 @@ from pyramid.paster import (
     )
 from pyramid.scripts.common import parse_vars
 
-from sso.db.models.meta import Base
+from gateway.db.models.meta import Base
 
-from sso.db.models import MyModel
-from sso.db.models import (
+from gateway.db.models import MyModel
+from gateway.db.models import (
     get_engine,
     get_session_factory,
     get_tm_session,
