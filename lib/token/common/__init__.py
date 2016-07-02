@@ -154,6 +154,46 @@ class TokenInterface(metaclass=ABCMeta):
     def expires_at(self, eat):
         pass
 
+    @property
+    @abstractmethod
+    def is_refresh_token(self):
+        pass
+
+    @is_refresh_token.setter
+    @abstractmethod
+    def is_refresh_token(self, v):
+        pass
+
+    @property
+    @abstractmethod
+    def is_impersonated(self):
+        pass
+
+    @is_impersonated.setter
+    @abstractmethod
+    def is_impersonated(self, v):
+        pass
+
+    @property
+    @abstractmethod
+    def is_mobile(self):
+        pass
+
+    @is_mobile.setter
+    @abstractmethod
+    def is_mobile(self, v):
+        pass
+
+    @property
+    @abstractmethod
+    def is_web(self):
+        pass
+
+    @is_web.setter
+    @abstractmethod
+    def is_web(self, v):
+        pass
+
     @abstractmethod
     def is_valid(self):
         pass

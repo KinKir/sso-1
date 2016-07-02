@@ -13,7 +13,7 @@ TOKEN_TYPE_WEB = 2
 
 TOKEN_TYPE_REFRESH = 4
 
-TOKEN_IMPERSONATION_IS_IMPERSONATED = 1
+TOKEN_IMPERSONATION_IS_IMPERSONATED = 2
 
 
 class Token(TokenInterface):
@@ -72,10 +72,11 @@ class Token(TokenInterface):
             token.expires_at.to_bytes(cls.expires_at_length, 'big')
         bytes_wrote += cls.expires_at_length
 
-        bin_token[bytes_wrote:bytes_wrote+cls.impersonation_info_length] = token.impersonation_info
+        bin_token[bytes_wrote:bytes_wrote+cls.impersonation_info_length] = \
+            token.impersonation_info.to_bytes(1, byteorder='big')
         bytes_wrote += cls.impersonation_info_length
 
-        bin_token[bytes_wrote:bytes_wrote+cls.token_type_length] = token.token_type
+        bin_token[bytes_wrote:bytes_wrote+cls.token_type_length] = token.token_type.to_bytes(1, byteorder='big')
         bytes_wrote += cls.token_type_length
 
         return bin_token
@@ -115,10 +116,12 @@ class Token(TokenInterface):
         obj.expires_at = int.from_bytes(plaintext[bytes_read:bytes_read+cls.expires_at_length], 'big')
         bytes_read += cls.expires_at_length
 
-        obj.impersonation_info = plaintext[bytes_read:bytes_read+cls.impersonation_info_length]
+        obj.impersonation_info = \
+            int.from_bytes(plaintext[bytes_read:bytes_read+cls.impersonation_info_length], 'big')
         bytes_read += cls.impersonation_info_length
 
-        obj.token_type = plaintext[bytes_read:bytes_read+cls.token_type_length]
+        obj.token_type = \
+            int.from_bytes(plaintext[bytes_read:bytes_read+cls.token_type_length], 'big')
         bytes_read += cls.token_type_length
 
         return obj
@@ -163,8 +166,8 @@ class Token(TokenInterface):
         self._mobile_client_secret_hash = bytes(32)
         self._issued_at = 0
         self._expires_at = 0
-        self._impersonation_info = bytes(1)
-        self._token_type = bytes(1)
+        self._impersonation_info = 0
+        self._token_type = 0
 
     # token id getter and setter
     @property
@@ -227,6 +230,8 @@ class Token(TokenInterface):
 
     @token_type.setter
     def token_type(self, t):
+        if t >= 256:
+            raise OverflowError
         self._token_type = t
 
     # Client secret hash getter and setter
@@ -254,6 +259,8 @@ class Token(TokenInterface):
 
     @impersonation_info.setter
     def impersonation_info(self, info):
+        if info >= 256:
+            raise OverflowError
         self._impersonation_info = info
 
     # issued at getter and setter
@@ -274,8 +281,59 @@ class Token(TokenInterface):
     def expires_at(self, eat):
         self._expires_at = eat
 
+    @property
+    def is_refresh_token(self):
+        return (self._token_type & TOKEN_TYPE_REFRESH) == TOKEN_TYPE_REFRESH
+
+    @is_refresh_token.setter
+    def is_refresh_token(self, v):
+        if v:
+            self._token_type |= TOKEN_TYPE_REFRESH
+        else:
+            self._token_type &= (~TOKEN_TYPE_REFRESH)
+
+    @property
+    def is_impersonated(self):
+        return (self._impersonation_info & TOKEN_IMPERSONATION_IS_IMPERSONATED) == TOKEN_IMPERSONATION_IS_IMPERSONATED
+
+    @is_impersonated.setter
+    def is_impersonated(self, v):
+        if v:
+            self._impersonation_info |= TOKEN_IMPERSONATION_IS_IMPERSONATED
+        else:
+            self._impersonation_info &= (~TOKEN_IMPERSONATION_IS_IMPERSONATED)
+
+    @property
+    def is_mobile(self):
+        return (self._token_type & TOKEN_TYPE_MOBILE) == TOKEN_TYPE_MOBILE
+
+    @is_mobile.setter
+    def is_mobile(self, v):
+        if v:
+            self._token_type |= TOKEN_TYPE_MOBILE
+        else:
+            self._token_type &= (~TOKEN_TYPE_MOBILE)
+
+    @property
+    def is_web(self):
+        return (self._token_type & TOKEN_TYPE_WEB) == TOKEN_TYPE_WEB
+
+    @is_web.setter
+    def is_web(self, v):
+        if v:
+            self._token_type |= TOKEN_TYPE_WEB
+        else:
+            self._token_type &= (~TOKEN_TYPE_WEB)
+
     def is_valid(self):
-        pass
+        if self.issued_at == 0 or self.expires_at == 0:
+            return False
+
+        if self.token_type & TOKEN_TYPE_MOBILE != TOKEN_TYPE_MOBILE and \
+           self.token_type & TOKEN_TYPE_WEB != TOKEN_TYPE_WEB:
+            return False
+
+        return True
 
     def to_dict(self):
         return {

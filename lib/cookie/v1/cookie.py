@@ -6,6 +6,12 @@ import uuid
 
 import hashlib
 
+SESSION_IMPERSONATION_IS_IMPERSONATED = 2
+
+SESSION_TYPE_MOBILE = 1
+
+SESSION_TYPE_WEB = 2
+
 
 class Cookie(object):
 
@@ -46,7 +52,7 @@ class Cookie(object):
         bin_token[bytes_wrote:bytes_wrote + cls.session_id_length] = token.session_id.bytes
         bytes_wrote += cls.session_id_length
 
-        bin_token[bytes_wrote:bytes_wrote + cls.session_type_length] = token.session_type
+        bin_token[bytes_wrote:bytes_wrote + cls.session_type_length] = token.session_type.to_bytes(1, byteorder='big')
         bytes_wrote += cls.session_type_length
 
         bin_token[bytes_wrote:bytes_wrote + cls.client_id_length] = token.client_id.bytes
@@ -68,7 +74,8 @@ class Cookie(object):
             token.expires_at.to_bytes(cls.expires_at_length, 'big')
         bytes_wrote += cls.expires_at_length
 
-        bin_token[bytes_wrote:bytes_wrote+cls.impersonation_info_length] = token.impersonation_info
+        bin_token[bytes_wrote:bytes_wrote+cls.impersonation_info_length] = \
+            token.impersonation_info.to_bytes(1, byteorder='big')
         bytes_wrote += cls.impersonation_info_length
 
         return bin_token
@@ -90,7 +97,7 @@ class Cookie(object):
         obj.session_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read+cls.session_id_length])
         bytes_read += cls.session_id_length
 
-        obj.session_type = plaintext[bytes_read:bytes_read + cls.session_type_length]
+        obj.session_type = int.from_bytes(plaintext[bytes_read:bytes_read + cls.session_type_length], 'big')
         bytes_read += cls.session_type_length
 
         obj.client_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read + cls.client_id_length])
@@ -111,7 +118,7 @@ class Cookie(object):
         obj.expires_at = int.from_bytes(plaintext[bytes_read:bytes_read+cls.expires_at_length], 'big')
         bytes_read += cls.expires_at_length
 
-        obj.impersonation_info = plaintext[bytes_read:bytes_read+cls.impersonation_info_length]
+        obj.impersonation_info = int.from_bytes(plaintext[bytes_read:bytes_read+cls.impersonation_info_length], 'big')
         bytes_read += cls.impersonation_info_length
 
         return obj
@@ -150,12 +157,12 @@ class Cookie(object):
         self._provider_id = uuid.UUID(hex='0'*32)
         self._user_data_pointer = uuid.UUID(hex='0'*32)
         self._session_id = uuid.UUID(hex='0'*32)
-        self._session_type = bytes(1)
+        self._session_type = 0
         self._client_id = uuid.UUID(hex='0'*32)
         self._client_secret_hash = bytes(32)
         self._mobile_client_id = uuid.UUID(hex='0'*32)
         self._mobile_client_secret_hash = bytes(32)
-        self._impersonation_info = bytes(1)
+        self._impersonation_info = 0
         self._issued_at = 0
         self._expires_at = 0
 
@@ -200,6 +207,8 @@ class Cookie(object):
 
     @session_type.setter
     def session_type(self, stp):
+        if stp >= 256:
+            raise OverflowError
         self._session_type = stp
 
     # Client id getter and setter
@@ -245,6 +254,8 @@ class Cookie(object):
 
     @impersonation_info.setter
     def impersonation_info(self, info):
+        if info >= 256:
+            raise OverflowError
         self._impersonation_info = info
 
     # issued at getter and setter
@@ -264,6 +275,42 @@ class Cookie(object):
     @expires_at.setter
     def expires_at(self, eat):
         self._expires_at = eat
+
+    @property
+    def is_impersonated(self):
+        return (self._impersonation_info & SESSION_IMPERSONATION_IS_IMPERSONATED) == \
+               SESSION_IMPERSONATION_IS_IMPERSONATED
+
+    @is_impersonated.setter
+    def is_impersonated(self, v):
+        if v:
+            self._impersonation_info |= SESSION_IMPERSONATION_IS_IMPERSONATED
+        else:
+            self._impersonation_info &= (~SESSION_IMPERSONATION_IS_IMPERSONATED)
+
+    @property
+    def is_mobile(self):
+        return (self._session_type & SESSION_TYPE_MOBILE) == SESSION_TYPE_MOBILE
+
+    @is_mobile.setter
+    def is_mobile(self, v):
+        if v:
+            self._session_type |= SESSION_TYPE_MOBILE
+        else:
+            self._session_type &= (~SESSION_TYPE_MOBILE)
+
+    @property
+    def is_web(self):
+        return (self._session_type & SESSION_TYPE_WEB) == SESSION_TYPE_WEB
+
+    @is_web.setter
+    def is_web(self, v):
+        if v:
+            self._session_type |= SESSION_TYPE_WEB
+        else:
+            self._session_type &= (~SESSION_TYPE_WEB)
+
+
 
 
 
