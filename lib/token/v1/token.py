@@ -152,113 +152,127 @@ class Token(TokenInterface):
         sha.update(secret.encode(encoding='utf-8', errors='strict'))
         return sha.digest()
 
+    def __init__(self):
+        self._token_id = uuid.UUID(hex='0'*32)
+        self._refresh_token_id = uuid.UUID(hex='0'*32)
+        self._user_id = uuid.UUID(hex='0'*32)
+        self._client_id = uuid.UUID(hex='0'*32)
+        self._mobile_client_id = uuid.UUID(hex='0'*32)
+        self._user_session_id = uuid.UUID(hex='0'*32)
+        self._client_secret_hash = bytes(32)
+        self._mobile_client_secret_hash = bytes(32)
+        self._issued_at = 0
+        self._expires_at = 0
+        self._impersonation_info = bytes(1)
+        self._token_type = bytes(1)
+
     # token id getter and setter
     @property
     def token_id(self):
-        pass
+        return self._token_id
 
     @token_id.setter
     def token_id(self, tid):
-        pass
+        self._token_id = tid
 
     # refresh token id getter and setter (Only there if this token is refresh token)
     @property
     def refresh_token_id(self):
-        pass
+        return self._refresh_token_id
 
     @refresh_token_id.setter
-    def refresh_token_id(self, tid):
-        pass
+    def refresh_token_id(self, rid):
+        self._refresh_token_id = rid
 
     # User id getter and setter
     @property
     def user_id(self):
-        pass
+        return self._user_id
 
     @user_id.setter
-    def user_id(self, user_id):
-        pass
+    def user_id(self, uid):
+        self._user_id = uid
 
     # Client id getter and setter
     @property
     def client_id(self):
-        pass
+        return self._client_id
 
     @client_id.setter
-    def client_id(self, client_id):
-        pass
+    def client_id(self, cid):
+        self._client_id = cid
 
     # Mobile Client id getter and setter
     @property
     def mobile_client_id(self):
-        pass
+        return self._mobile_client_id
 
     @mobile_client_id.setter
-    def mobile_client_id(self, client_id):
-        pass
+    def mobile_client_id(self, m_cid):
+        self._mobile_client_id = m_cid
 
     # User session id getter and setter
     @property
     def user_session_id(self):
-        pass
+        return self._user_session_id
 
     @user_session_id.setter
-    def user_session_id(self, session_id):
-        pass
+    def user_session_id(self, u_sid):
+        self._user_session_id = u_sid
 
     # Token type getter and setter
     @property
     def token_type(self):
-        pass
+        return self._token_type
 
     @token_type.setter
-    def token_type(self, type_of_token):
-        pass
+    def token_type(self, t):
+        self._token_type = t
 
     # Client secret hash getter and setter
     @property
     def client_secret_hash(self):
-        pass
+        return self._client_secret_hash
 
     @client_secret_hash.setter
-    def client_secret_hash(self, secret_hash):
-        pass
+    def client_secret_hash(self, h):
+        self._client_secret_hash = h
 
     # Client secret hash getter and setter
     @property
     def mobile_client_secret_hash(self):
-        pass
+        return self._mobile_client_secret_hash
 
     @mobile_client_secret_hash.setter
-    def mobile_client_secret_hash(self, secret_hash):
-        pass
+    def mobile_client_secret_hash(self, h):
+        self._mobile_client_secret_hash = h
 
     # is impersonated getter and setter
     @property
     def impersonation_info(self):
-        pass
+        return self._impersonation_info
 
     @impersonation_info.setter
     def impersonation_info(self, info):
-        pass
+        self._impersonation_info = info
 
     # issued at getter and setter
     @property
     def issued_at(self):
-        pass
+        return self._issued_at
 
     @issued_at.setter
     def issued_at(self, iat):
-        pass
+        self._issued_at = iat
 
     # Expires at getter and setter
     @property
     def expires_at(self):
-        pass
+        return self._expires_at
 
     @expires_at.setter
     def expires_at(self, eat):
-        pass
+        self._expires_at = eat
 
     def is_valid(self):
         pass

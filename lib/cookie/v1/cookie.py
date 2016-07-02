@@ -126,12 +126,18 @@ class Cookie(object):
         return cls._parse(plaintext)
 
     @classmethod
-    def serialize(cls, token, keyid, key_retrieval_func):
+    def serialize(cls, cookie, keyid, key_retrieval_func):
         key = key_retrieval_func(keyid)
-        plaintext = cls._tobin(token)
+        plaintext = cls._tobin(cookie)
         iv, ciphertext, tag = encrypt(key, plaintext, None)
         packed = pack(iv, ciphertext, tag, None, keyid.bytes)
         return encode(packed)
+
+    @classmethod
+    def generate_client_secret_hash(cls, secret):
+        sha = hashlib.sha256()
+        sha.update(secret.encode(encoding='utf-8', errors='strict'))
+        return sha.digest()
 
     @classmethod
     def generate_mobile_client_secret_hash(cls, secret):
@@ -140,20 +146,18 @@ class Cookie(object):
         return sha.digest()
 
     def __init__(self):
-        self._user_id = None
-        self._provider_id = None
-        self._user_data_pointer = None
-        self._session_id = None
-        self._session_type = None
-        self._client_id = None
-        self._client_secret_hash = None
-        self._mobile_client_id = None
-        self._mobile_client_secret_hash = None
-        self._impersonation_info = None
-        self._issued_at = None
-        self._expires_at = None
-        self._issued_at = None
-        self._impersonation_info = None
+        self._user_id = uuid.UUID(hex='0'*32)
+        self._provider_id = uuid.UUID(hex='0'*32)
+        self._user_data_pointer = uuid.UUID(hex='0'*32)
+        self._session_id = uuid.UUID(hex='0'*32)
+        self._session_type = bytes(1)
+        self._client_id = uuid.UUID(hex='0'*32)
+        self._client_secret_hash = bytes(32)
+        self._mobile_client_id = uuid.UUID(hex='0'*32)
+        self._mobile_client_secret_hash = bytes(32)
+        self._impersonation_info = bytes(1)
+        self._issued_at = 0
+        self._expires_at = 0
 
     # User id getter and setter
     @property
@@ -213,7 +217,7 @@ class Cookie(object):
         return self._client_secret_hash
 
     @client_secret_hash.setter
-    def client_secret_hash(self, hsso):
+    def client_secret_hash(self, h):
         self._client_secret_hash = h
 
     # Mobile Client id getter and setter
