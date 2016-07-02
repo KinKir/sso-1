@@ -24,15 +24,26 @@ class TokenInterface(metaclass=ABCMeta):
     def generate_mobile_client_secret_hash(cls, secret):
         pass
 
-    # Organization id getter and setter
+    # token id getter and setter
     @property
     @abstractmethod
-    def organization_id(self):
+    def token_id(self):
         pass
 
-    @organization_id.setter
+    @token_id.setter
     @abstractmethod
-    def organization_id(self, org_id):
+    def token_id(self, tid):
+        pass
+
+    # refresh token id getter and setter (Only there if this token is refresh token)
+    @property
+    @abstractmethod
+    def refresh_token_id(self):
+        pass
+
+    @refresh_token_id.setter
+    @abstractmethod
+    def refresh_token_id(self, tid):
         pass
 
     # User id getter and setter
