@@ -1,6 +1,7 @@
 from app_factory import create_app
+from blueprints import available_blueprints
 
-app = create_app([])
+app = create_app(available_blueprints)
 
 
 @app.route('/')
