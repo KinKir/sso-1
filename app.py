@@ -8,4 +8,4 @@ def create_app(blueprints, default_config_obj='config.default', config_filename=
     for blueprint in blueprints:
         app.register_blueprint(blueprint)
     return app
-    
+
