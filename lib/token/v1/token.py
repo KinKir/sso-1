@@ -266,6 +266,7 @@ class Token(TokenInterface):
     def to_dict(self):
         return {
             'token_id': self.token_id,
+            'refresh_token_id': self.refresh_token_id,
             'user_id': self.user_id,
             'client_id': self.client_id,
             'mobile_client_id': self.mobile_client_id,
