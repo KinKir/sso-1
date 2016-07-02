@@ -11,13 +11,16 @@ TOKEN_TYPE_MOBILE = 1
 
 TOKEN_TYPE_WEB = 2
 
+TOKEN_TYPE_REFRESH = 4
+
 TOKEN_IMPERSONATION_IS_IMPERSONATED = 1
 
 
 class Token(TokenInterface):
 
     # Field order and their respective size
-    organization_id_length = 16
+    token_id_length = 16
+    refresh_token_id_length = 16
     user_id_length = 16
     client_id_length = 16
     mobile_client_id_length = 16
@@ -33,13 +36,16 @@ class Token(TokenInterface):
     def _tobin(cls, token):
         bytes_wrote = 0
 
-        bin_token = bytearray(cls.organization_id_length + cls.user_id_length+cls.client_id_length +
+        bin_token = bytearray(cls.token_id_length+cls.refresh_token_id_length+cls.user_id_length+cls.client_id_length +
                               cls.mobile_client_id_length+cls.user_session_id_length+cls.client_secret_hash_length +
                               cls.mobile_client_secret_hash_length+cls.issued_at_length+cls.expires_at_length +
                               cls.impersonation_info_length+cls.token_type_length)
 
-        bin_token[bytes_wrote:bytes_wrote+cls.organization_id_length] = token.organization_id.bytes
-        bytes_wrote += cls.organization_id_length
+        bin_token[bytes_wrote:bytes_wrote + cls.token_id_length] = token.token_id.bytes
+        bytes_wrote += cls.token_id_length
+
+        bin_token[bytes_wrote:bytes_wrote + cls.refresh_token_id_length] = token.refresh_token_id.bytes
+        bytes_wrote += cls.refresh_token_id_length
 
         bin_token[bytes_wrote:bytes_wrote + cls.user_id_length] = token.user_id.bytes
         bytes_wrote += cls.user_id_length
@@ -79,8 +85,11 @@ class Token(TokenInterface):
         obj = cls()
         bytes_read = 0
 
-        obj.organization_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read+cls.organization_id_length])
-        bytes_read += cls.organization_id_length
+        obj.token_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read + cls.token_id_length])
+        bytes_read += cls.token_id_length
+
+        obj.refresh_token_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read + cls.refresh_token_id_length])
+        bytes_read += cls.refresh_token_id_length
 
         obj.user_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read+cls.user_id_length])
         bytes_read += cls.user_id_length
@@ -143,13 +152,22 @@ class Token(TokenInterface):
         sha.update(secret.encode(encoding='utf-8', errors='strict'))
         return sha.digest()
 
-    # Organization id getter and setter
+    # token id getter and setter
     @property
-    def organization_id(self):
+    def token_id(self):
         pass
 
-    @organization_id.setter
-    def organization_id(self, org_id):
+    @token_id.setter
+    def token_id(self, tid):
+        pass
+
+    # refresh token id getter and setter (Only there if this token is refresh token)
+    @property
+    def refresh_token_id(self):
+        pass
+
+    @refresh_token_id.setter
+    def refresh_token_id(self, tid):
         pass
 
     # User id getter and setter
@@ -247,7 +265,7 @@ class Token(TokenInterface):
 
     def to_dict(self):
         return {
-            'organization_id': self.organization_id,
+            'token_id': self.token_id,
             'user_id': self.user_id,
             'client_id': self.client_id,
             'mobile_client_id': self.mobile_client_id,
