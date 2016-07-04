@@ -22,3 +22,5 @@ class UserAccount(Base):
     user_id = Column(guid.GUID(), ForeignKey('users.id'), index=True, unique=True)
     user = relationship('User', back_populates='user_accounts')
 
+    user_account_extra_data = relationship('UserAccountExtraData', back_populates='user_account')
+
