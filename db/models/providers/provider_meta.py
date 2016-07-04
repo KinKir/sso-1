@@ -7,10 +7,11 @@ from db.utils import guid
 
 
 class ProviderMeta(Base):
-    id = Column(guid.GUID(), primary_key=True)
+    __tablename__ = 'provider_metas'
+
+    id = Column(guid.GUID(), ForeignKey('providers.id'), primary_key=True)
     logo = Column(String(2048), nullable=True)
     name = Column(String(512), nullable=False)
 
-    provider_id = Column(guid.GUID, ForeignKey('provider.id'))
     provider = relationship('Provider', back_populates='meta')
 

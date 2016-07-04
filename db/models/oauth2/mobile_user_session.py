@@ -7,6 +7,7 @@ from db.utils import guid
 
 
 class MobileUserSession(Base):
+    __tablename__ = 'mobile_user_sessions'
     id = Column(guid.GUID, primary_key=True)
 
     mobile_client_id = Column(guid.GUID(), ForeignKey('mobile_clients.id'), nullable=False)

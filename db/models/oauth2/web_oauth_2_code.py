@@ -7,7 +7,7 @@ from db.utils import guid
 
 
 class WebOAuth2Code(Base):
-    __table__ = 'web_oauth_2_codes'
+    __tablename__ = 'web_oauth_2_codes'
 
     id = Column(guid.GUID(), primary_key=True)
     code = Column(String(256), index=True, unique=True, nullable=False)

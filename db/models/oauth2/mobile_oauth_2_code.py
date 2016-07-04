@@ -7,7 +7,7 @@ from db.utils import guid
 
 
 class MobileOAuth2Code(Base):
-    __table__ = 'mobile_oauth_2_codes'
+    __tablename__ = 'mobile_oauth_2_codes'
 
     id = Column(guid.GUID(), primary_key=True)
     code = Column(String(256), nullable=False, index=True, unique=True)

@@ -7,7 +7,7 @@ from db.utils import guid
 
 
 class MobileClient(Base):
-    __tables__ = 'mobile_clients'
+    __tablename__ = 'mobile_clients'
     id = Column(guid.GUID(), primary_key=True)
     secret_hash = Column(String(64), nullable=False)
     redirect_uris = Column(String, nullable=False)
