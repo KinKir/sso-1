@@ -16,6 +16,7 @@ SESSION_TYPE_WEB = 2
 class Cookie(object):
 
     # Field order and their respective size
+    tenant_id_length = 16
     user_id_length = 16
     provider_id_length = 16
     user_data_pointer_length = 16
@@ -34,11 +35,14 @@ class Cookie(object):
     def _tobin(cls, token):
         bytes_wrote = 0
 
-        bin_token = bytearray(cls.user_id_length+cls.provider_id_length+cls.user_data_pointer_length +
-                              cls.session_id_length+cls.session_type_length+cls.client_id_length +
-                              cls.client_secret_hash_length+cls.mobile_client_id_length +
+        bin_token = bytearray(cls.tenant_id_length+cls.user_id_length+cls.provider_id_length +
+                              cls.user_data_pointer_length+cls.session_id_length+cls.session_type_length +
+                              cls.client_id_length+cls.client_secret_hash_length+cls.mobile_client_id_length +
                               cls.mobile_client_secret_hash_length+cls.issued_at_length+cls.expires_at_length +
                               cls.impersonation_info_length)
+
+        bin_token[bytes_wrote:bytes_wrote + cls.tenant_id_length] = token.tenant_id.bytes
+        bytes_wrote += cls.tenant_id_length
 
         bin_token[bytes_wrote:bytes_wrote + cls.user_id_length] = token.user_id.bytes
         bytes_wrote += cls.user_id_length
@@ -84,6 +88,9 @@ class Cookie(object):
     def _parse(cls, plaintext):
         obj = cls()
         bytes_read = 0
+
+        obj.tenant_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read + cls.tenant_id_length])
+        bytes_read += cls.tenant_id_length
 
         obj.user_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read+cls.user_id_length])
         bytes_read += cls.user_id_length
@@ -153,6 +160,7 @@ class Cookie(object):
         return sha.digest()
 
     def __init__(self):
+        self._tenant_id = uuid.UUID(hex='0' * 32)
         self._user_id = uuid.UUID(hex='0'*32)
         self._provider_id = uuid.UUID(hex='0'*32)
         self._user_data_pointer = uuid.UUID(hex='0'*32)
@@ -165,6 +173,14 @@ class Cookie(object):
         self._impersonation_info = 0
         self._issued_at = 0
         self._expires_at = 0
+
+    @property
+    def tenant_id(self):
+        return self._tenant_id
+
+    @tenant_id.setter
+    def tenant_id(self, tid):
+        self._tenant_id = tid
 
     # User id getter and setter
     @property

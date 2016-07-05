@@ -21,6 +21,7 @@ class Token(TokenInterface):
     # Field order and their respective size
     token_id_length = 16
     refresh_token_id_length = 16
+    tenant_id_length = 16
     user_id_length = 16
     client_id_length = 16
     mobile_client_id_length = 16
@@ -36,16 +37,19 @@ class Token(TokenInterface):
     def _tobin(cls, token):
         bytes_wrote = 0
 
-        bin_token = bytearray(cls.token_id_length+cls.refresh_token_id_length+cls.user_id_length+cls.client_id_length +
-                              cls.mobile_client_id_length+cls.user_session_id_length+cls.client_secret_hash_length +
-                              cls.mobile_client_secret_hash_length+cls.issued_at_length+cls.expires_at_length +
-                              cls.impersonation_info_length+cls.token_type_length)
+        bin_token = bytearray(cls.token_id_length+cls.refresh_token_id_length+cls.tenant_id_length+cls.user_id_length +
+                              cls.client_id_length+cls.mobile_client_id_length+cls.user_session_id_length +
+                              cls.client_secret_hash_length+cls.mobile_client_secret_hash_length+cls.issued_at_length +
+                              cls.expires_at_length+cls.impersonation_info_length+cls.token_type_length)
 
         bin_token[bytes_wrote:bytes_wrote + cls.token_id_length] = token.token_id.bytes
         bytes_wrote += cls.token_id_length
 
         bin_token[bytes_wrote:bytes_wrote + cls.refresh_token_id_length] = token.refresh_token_id.bytes
         bytes_wrote += cls.refresh_token_id_length
+
+        bin_token[bytes_wrote:bytes_wrote + cls.tenant_id_length] = token.tenant_id.bytes
+        bytes_wrote += cls.tenant_id_length
 
         bin_token[bytes_wrote:bytes_wrote + cls.user_id_length] = token.user_id.bytes
         bytes_wrote += cls.user_id_length
@@ -91,6 +95,9 @@ class Token(TokenInterface):
 
         obj.refresh_token_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read + cls.refresh_token_id_length])
         bytes_read += cls.refresh_token_id_length
+
+        obj.tenant_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read + cls.tenant_id_length])
+        bytes_read += cls.tenant_id_length
 
         obj.user_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read+cls.user_id_length])
         bytes_read += cls.user_id_length
@@ -158,6 +165,7 @@ class Token(TokenInterface):
     def __init__(self):
         self._token_id = uuid.UUID(hex='0'*32)
         self._refresh_token_id = uuid.UUID(hex='0'*32)
+        self._tenant_id = uuid.UUID(hex='0'*32)
         self._user_id = uuid.UUID(hex='0'*32)
         self._client_id = uuid.UUID(hex='0'*32)
         self._mobile_client_id = uuid.UUID(hex='0'*32)
@@ -186,6 +194,15 @@ class Token(TokenInterface):
     @refresh_token_id.setter
     def refresh_token_id(self, rid):
         self._refresh_token_id = rid
+
+    # Tenant id getter and setter
+    @property
+    def tenant_id(self):
+        return self._tenant_id
+
+    @tenant_id.setter
+    def tenant_id(self, tid):
+        self._tenant_id = tid
 
     # User id getter and setter
     @property

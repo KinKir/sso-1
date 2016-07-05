@@ -46,6 +46,16 @@ class TokenInterface(metaclass=ABCMeta):
     def refresh_token_id(self, tid):
         pass
 
+    @property
+    @abstractmethod
+    def tenant_id(self):
+        pass
+
+    @tenant_id.setter
+    @abstractmethod
+    def tenant_id(self, tid):
+        pass
+
     # User id getter and setter
     @property
     @abstractmethod
