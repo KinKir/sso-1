@@ -4,6 +4,8 @@ from sqlalchemy.orm import relationship
 from db.meta import Base
 from db.utils import guid
 
+from db.models.user_organization_association import user_organization_association
+
 
 class User(Base):
     __tablename__ = 'users'
@@ -21,3 +23,5 @@ class User(Base):
     user_name = Column(String(1024), nullable=False, index=True, unique=True)
 
     user_accounts = relationship('UserAccount', back_populates='user')
+
+    organizations = relationship('Organization', secondary=user_organization_association, back_populates='users')
