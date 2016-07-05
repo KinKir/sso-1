@@ -89,7 +89,7 @@ class Cookie(object):
         obj = cls()
         bytes_read = 0
 
-        obj.tenant_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read + cls.tenant_id_length])
+        obj.tenant_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read+cls.tenant_id_length])
         bytes_read += cls.tenant_id_length
 
         obj.user_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read+cls.user_id_length])
