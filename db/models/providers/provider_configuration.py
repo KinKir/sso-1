@@ -9,8 +9,8 @@ from db.utils import guid
 class ProviderConfiguration(Base):
     __tablename__ = 'provider_configurations'
 
-    key = Column(String(512), nullable=False, primary_key=True)
+    key = Column(String(512), primary_key=True)
     value = Column(String, nullable=False)
 
     provider_id = Column(guid.GUID(), ForeignKey('providers.id'), primary_key=True)
-    provider = relationship('Provider', back_populates='configuration')
+    provider = relationship('Provider', back_populates='configurations')

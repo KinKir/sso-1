@@ -1,5 +1,4 @@
 from sqlalchemy import Column, String, Boolean
-from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 
 from db.meta import Base
@@ -16,7 +15,7 @@ class User(Base):
     email = Column(String(512), nullable=False, index=True, unique=True)
     email_verified = Column(Boolean, nullable=False)
 
-    phone_number = Column(String(15), nullable=True)
+    phone_number = Column(String(20), nullable=True, index=True, unique=True)
     phone_number_verified = Column(Boolean, nullable=True)
 
     user_name = Column(String(1024), nullable=False, index=True, unique=True)

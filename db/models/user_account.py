@@ -16,7 +16,7 @@ class UserAccount(Base):
     email = Column(String(512), nullable=False, index=True, unique=True)
     email_verified = Column(Boolean, nullable=False)
 
-    phone_number = Column(String(15), nullable=True)
+    phone_number = Column(String(20), nullable=True, index=True, unique=True)
     phone_number_verified = Column(Boolean, nullable=True)
 
     user_id = Column(guid.GUID(), ForeignKey('users.id'), index=True, unique=True)

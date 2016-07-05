@@ -11,8 +11,8 @@ class MobileOAuth2Code(Base):
 
     id = Column(guid.GUID(), primary_key=True)
     code = Column(String(256), nullable=False, index=True, unique=True)
-    expires_at = Column(BigInteger)
-    created_at = Column(BigInteger)
+    expires_at = Column(BigInteger, nullable=False)
+    created_at = Column(BigInteger, nullable=False)
 
-    mobile_client_id = Column(guid.GUID(), ForeignKey('mobile_clients.id'))
+    mobile_client_id = Column(guid.GUID(), ForeignKey('mobile_clients.id'), nullable=False)
     mobile_client = relationship('MobileClient', back_populates='mobile_oauth_2_codes')

@@ -14,5 +14,5 @@ class WebOAuth2Code(Base):
     expires_at = Column(BigInteger, nullable=False)
     created_at = Column(BigInteger, nullable=False)
 
-    web_client_id = Column(guid.GUID(), ForeignKey('web_clients.id'))
+    web_client_id = Column(guid.GUID(), ForeignKey('web_clients.id'), nullable=False)
     web_client = relationship('WebClient', back_populates='web_oauth_2_codes')
