@@ -12,7 +12,7 @@ class Provider(Base):
     id = Column(guid.GUID(), primary_key=True)
     provider_class = Column(String, index=True, nullable=False)
 
-    meta = relationship('ProviderMeta', use_lists=False, back_populates='provider')
+    meta = relationship('ProviderMeta', uselist=False, back_populates='provider')
     configurations = relationship('ProviderConfiguration', back_populates='provider')
 
     tenant_id = Column(guid.GUID(), ForeignKey('tenants.id'), nullable=False)

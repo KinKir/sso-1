@@ -9,7 +9,7 @@ configure_mappers()
 SessionFactory = sessionmaker()
 
 
-def init_db(uri, echo):
+def init_db_session_factory(uri, echo):
     SessionFactory.configure(bind=create_engine(uri, echo))
 
-__all__ = ['SessionFactory', 'init_db']
+__all__ = ['SessionFactory', 'init_db_session_factory']

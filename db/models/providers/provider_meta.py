@@ -13,5 +13,5 @@ class ProviderMeta(Base):
     logo = Column(String(2048), nullable=False)
     name = Column(String(512), nullable=False)
 
-    provider = relationship('Provider', back_populates='meta')
+    provider = relationship('Provider', uselist=False, back_populates='meta')
 
