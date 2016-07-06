@@ -354,6 +354,7 @@ class Token(TokenInterface):
 
     def to_dict(self):
         return {
+            'tenant_id': self.tenant_id,
             'token_id': self.token_id,
             'refresh_token_id': self.refresh_token_id,
             'user_id': self.user_id,
