@@ -10,6 +10,7 @@ if os.environ.get('ENVIRONMENT', None) is None:
                        ' which is required for loading configuration.')
 
 environment = os.environ['ENVIRONMENT']
+print('Running from environment:' + environment)
 
 app = create_app(available_blueprints, app_ctx_globals_class=SSOAppContextGlobals, config_filename=environment+'.py')
 init_db_session_factory(app.config['SQLALCHEMY_DB_URI'], app.config['SQLALCHEMY_DB_ECHO'])
