@@ -10,5 +10,5 @@ if __name__ == '__main__':
     Base.metadata.create_all(engine)
     sys.exit(0)
 else:
-    print('Not a library module. Use it for creating table for sso.')
+    print('Not a library module. Use it for creating tables for sso.')
 

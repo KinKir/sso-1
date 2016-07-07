@@ -1,6 +1,6 @@
-from lib.cookie.v1.packer import pack, unpack
-from lib.cookie.v1.coder import encode, decode
-from lib.cookie.v1.cryptor import encrypt, decrypt
+from lib.user_cookie.v1.packer import pack, unpack
+from lib.user_cookie.v1.coder import encode, decode
+from lib.user_cookie.v1.cryptor import encrypt, decrypt
 
 import uuid
 
