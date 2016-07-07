@@ -1,4 +1,4 @@
-from sqlalchemy import Column
+from sqlalchemy import Column, String
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 
@@ -10,6 +10,8 @@ class WebUserSession(Base):
     __tablename__ = 'web_user_sessions'
 
     id = Column(guid.GUID, primary_key=True)
+
+    logout_token = Column(String, nullable=False)
 
     web_client_id = Column(guid.GUID(), ForeignKey('web_clients.id'), nullable=False)
     web_client = relationship('WebClient', back_populates='web_user_sessions')
