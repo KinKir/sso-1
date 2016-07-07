@@ -1,6 +1,6 @@
-from lib.user_cookie.v1.packer import pack, unpack
-from lib.user_cookie.v1.coder import encode, decode
-from lib.user_cookie.v1.cryptor import encrypt, decrypt
+from lib.login_session.v1.packer import pack, unpack
+from lib.login_session.v1.coder import encode, decode
+from lib.login_session.v1.cryptor import encrypt, decrypt
 
 import uuid
 
@@ -12,6 +12,17 @@ SESSION_TYPE_MOBILE = 1
 
 SESSION_TYPE_WEB = 2
 
+# Stages of session
+SESSION_STAGE_NOT_INITIALIZED = 0
+
+SESSION_STAGE_LOGIN_STARTED = 1
+
+SESSION_STAGE_PROVIDER_CHOOSE = 2
+
+SESSION_STAGE_PROVIDER_EXECUTION = 3
+
+SESSION_STAGE_LOGGED_IN = 4
+
 
 class Cookie(object):
 
@@ -20,15 +31,16 @@ class Cookie(object):
     user_id_length = 16
     provider_id_length = 16
     user_data_pointer_length = 16
-    oauth_params_pointer_length = 16
     session_id_length = 16
     session_type_length = 1
+    session_stage_length = 1
     client_id_length = 16
     client_secret_hash_length = 32
     mobile_client_id_length = 16
     mobile_client_secret_hash_length = 32
     issued_at_length = 8
     expires_at_length = 8
+    logout_token_length = 32
     impersonation_info_length = 1
 
     @classmethod
@@ -37,9 +49,9 @@ class Cookie(object):
 
         bin_token = bytearray(cls.tenant_id_length+cls.user_id_length+cls.provider_id_length +
                               cls.user_data_pointer_length+cls.session_id_length+cls.session_type_length +
-                              cls.client_id_length+cls.client_secret_hash_length+cls.mobile_client_id_length +
-                              cls.mobile_client_secret_hash_length+cls.issued_at_length+cls.expires_at_length +
-                              cls.impersonation_info_length)
+                              cls.session_stage_length+cls.client_id_length+cls.client_secret_hash_length +
+                              cls.mobile_client_id_length+cls.mobile_client_secret_hash_length+cls.issued_at_length +
+                              cls.expires_at_length+cls.logout_token_lengthcls.impersonation_info_length)
 
         bin_token[bytes_wrote:bytes_wrote + cls.tenant_id_length] = token.tenant_id.bytes
         bytes_wrote += cls.tenant_id_length
@@ -59,6 +71,9 @@ class Cookie(object):
         bin_token[bytes_wrote:bytes_wrote + cls.session_type_length] = token.session_type.to_bytes(1, byteorder='big')
         bytes_wrote += cls.session_type_length
 
+        bin_token[bytes_wrote:bytes_wrote + cls.session_stage_length] = token.session_stage.to_bytes(1, byteorder='big')
+        bytes_wrote += cls.session_stage_length
+
         bin_token[bytes_wrote:bytes_wrote + cls.client_id_length] = token.client_id.bytes
         bytes_wrote += cls.client_id_length
 
@@ -77,6 +92,9 @@ class Cookie(object):
         bin_token[bytes_wrote:bytes_wrote+cls.expires_at_length] = \
             token.expires_at.to_bytes(cls.expires_at_length, 'big')
         bytes_wrote += cls.expires_at_length
+
+        bin_token[bytes_wrote:bytes_wrote + cls.logout_token_length] = token.logout_token
+        bytes_wrote += cls.logout_token_length
 
         bin_token[bytes_wrote:bytes_wrote+cls.impersonation_info_length] = \
             token.impersonation_info.to_bytes(1, byteorder='big')
@@ -107,6 +125,9 @@ class Cookie(object):
         obj.session_type = int.from_bytes(plaintext[bytes_read:bytes_read + cls.session_type_length], 'big')
         bytes_read += cls.session_type_length
 
+        obj.session_stage = int.from_bytes(plaintext[bytes_read:bytes_read + cls.session_stage_length], 'big')
+        bytes_read += cls.session_stage_length
+
         obj.client_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read + cls.client_id_length])
         bytes_read += cls.client_id_length
 
@@ -124,6 +145,9 @@ class Cookie(object):
 
         obj.expires_at = int.from_bytes(plaintext[bytes_read:bytes_read+cls.expires_at_length], 'big')
         bytes_read += cls.expires_at_length
+
+        obj.logout_token = plaintext[bytes_read:bytes_read + cls.logout_token_length]
+        bytes_read += cls.logout_token_length
 
         obj.impersonation_info = int.from_bytes(plaintext[bytes_read:bytes_read+cls.impersonation_info_length], 'big')
         bytes_read += cls.impersonation_info_length
@@ -166,6 +190,7 @@ class Cookie(object):
         self._user_data_pointer = uuid.UUID(hex='0'*32)
         self._session_id = uuid.UUID(hex='0'*32)
         self._session_type = 0
+        self._session_stage = SESSION_STAGE_NOT_INITIALIZED
         self._client_id = uuid.UUID(hex='0'*32)
         self._client_secret_hash = bytes(32)
         self._mobile_client_id = uuid.UUID(hex='0'*32)
@@ -173,6 +198,7 @@ class Cookie(object):
         self._impersonation_info = 0
         self._issued_at = 0
         self._expires_at = 0
+        self._logout_token = bytes(32)
 
     @property
     def tenant_id(self):
@@ -227,6 +253,18 @@ class Cookie(object):
             raise OverflowError
         self._session_type = stp
 
+    @property
+    def session_stage(self):
+        return self._session_stage
+
+    @session_stage.setter
+    def session_stage(self, stg):
+        if stg >= 256:
+            raise OverflowError
+        if stg - self._session_stage > 1:
+            raise NotImplementedError
+        self._session_stage = stg
+
     # Client id getter and setter
     @property
     def client_id(self):
@@ -262,6 +300,15 @@ class Cookie(object):
     @mobile_client_secret_hash.setter
     def mobile_client_secret_hash(self, h):
         self._mobile_client_secret_hash = h
+
+    # logout token getter and setter
+    @property
+    def logout_token(self):
+        return self._logout_token
+
+    @logout_token.setter
+    def logout_token(self, lt):
+        self._logout_token = lt
 
     # is impersonated getter and setter
     @property
@@ -325,6 +372,20 @@ class Cookie(object):
             self._session_type |= SESSION_TYPE_WEB
         else:
             self._session_type &= (~SESSION_TYPE_WEB)
+
+    def is_choosing_provider(self):
+        return self._session_stage == SESSION_STAGE_PROVIDER_CHOOSE
+
+    def is_executing_provider(self):
+        return self._session_stage == SESSION_STAGE_PROVIDER_EXECUTION
+
+    def is_user_logged_in(self):
+        return self._session_stage == SESSION_STAGE_LOGGED_IN
+
+    def is_login_started(self):
+        return self._session_stage == SESSION_STAGE_LOGGED_IN
+
+
 
 
 

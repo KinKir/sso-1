@@ -13,3 +13,6 @@ class WebUserSession(Base):
 
     web_client_id = Column(guid.GUID(), ForeignKey('web_clients.id'), nullable=False)
     web_client = relationship('WebClient', back_populates='web_user_sessions')
+
+    user_id = Column(guid.GUID(), ForeignKey('users.id'), nullable=False)
+    user = relationship('User', back_populates='web_sessions')

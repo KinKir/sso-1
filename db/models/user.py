@@ -25,3 +25,6 @@ class User(Base):
     user_accounts = relationship('UserAccount', back_populates='user')
 
     organizations = relationship('Organization', secondary=user_organization_association, back_populates='users')
+
+    web_sessions = relationship('WebUserSessions', back_populates='user')
+    mobile_sessions = relationship('MobileUserSessions', back_populates='user')
