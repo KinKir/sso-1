@@ -12,6 +12,6 @@ class TenantExtraData(Base):
     key = Column(String(512), primary_key=True)
     value = Column(String, nullable=False)
 
-    tenant_id = Column(guid.GUID(), ForeignKey('tenants.id'), nullable=False)
+    tenant_id = Column(guid.GUID(), ForeignKey('tenants.id'), nullable=False, primary_key=True)
     tenant = relationship('Tenant', back_populates='tenant_extra_data')
 

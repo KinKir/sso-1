@@ -3,6 +3,7 @@ from db.models.providers import *
 
 from db.models.organization import Organization
 from db.models.tenant import Tenant
+from db.models.tenant_email_patterns import TenantEmailPattern
 from db.models.tenant_extra_data import TenantExtraData
 from db.models.user import User
 from db.models.user_account import UserAccount

@@ -10,7 +10,7 @@ class Tenant(Base):
 
     id = Column(guid.GUID(), primary_key=True)
     logo = Column(String(2048), nullable=False)
-    name = Column(String(512), nullable=False)
+    name = Column(String(512), nullable=False, unique=True, index=True)
     html = Column(String, nullable=True)
     css = Column(String, nullable=True)
 
@@ -19,4 +19,6 @@ class Tenant(Base):
     users = relationship('User', back_populates='tenant')
 
     tenant_extra_data = relationship('TenantExtraData', back_populates='tenant')
+
+    email_patterns = relationship('TenantEmailPattern', back_populates='tenant')
 
