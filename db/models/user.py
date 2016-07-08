@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean
+from sqlalchemy import Column, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 
 from db.meta import Base
@@ -22,9 +22,12 @@ class User(Base):
 
     user_name = Column(String(1024), nullable=False, index=True, unique=True)
 
+    tenant_id = Column(guid.GUID(), ForeignKey('tenants.id'), nullable=False)
+    tenant = relationship('Tenant', back_populates='users')
+
     user_accounts = relationship('UserAccount', back_populates='user')
 
     organizations = relationship('Organization', secondary=user_organization_association, back_populates='users')
 
-    web_sessions = relationship('WebUserSessions', back_populates='user')
-    mobile_sessions = relationship('MobileUserSessions', back_populates='user')
+    sessions = relationship('UserSession', back_populates='user')
+

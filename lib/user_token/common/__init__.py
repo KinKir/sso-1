@@ -78,15 +78,6 @@ class TokenInterface(metaclass=ABCMeta):
     def client_id(self, client_id):
         pass
 
-    # Mobile Client id getter and setter
-    @property
-    def mobile_client_id(self):
-        pass
-
-    @mobile_client_id.setter
-    def mobile_client_id(self, client_id):
-        pass
-
     # User session id getter and setter
     @property
     @abstractmethod
@@ -118,17 +109,6 @@ class TokenInterface(metaclass=ABCMeta):
     @client_secret_hash.setter
     @abstractmethod
     def client_secret_hash(self, secret_hash):
-        pass
-
-    # Client secret hash getter and setter
-    @property
-    @abstractmethod
-    def mobile_client_secret_hash(self):
-        pass
-
-    @mobile_client_secret_hash.setter
-    @abstractmethod
-    def mobile_client_secret_hash(self, secret_hash):
         pass
 
     # is impersonated getter and setter
@@ -182,16 +162,6 @@ class TokenInterface(metaclass=ABCMeta):
     @is_impersonated.setter
     @abstractmethod
     def is_impersonated(self, v):
-        pass
-
-    @property
-    @abstractmethod
-    def is_mobile(self):
-        pass
-
-    @is_mobile.setter
-    @abstractmethod
-    def is_mobile(self, v):
         pass
 
     @property

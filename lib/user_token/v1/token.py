@@ -24,10 +24,8 @@ class Token(TokenInterface):
     tenant_id_length = 16
     user_id_length = 16
     client_id_length = 16
-    mobile_client_id_length = 16
     user_session_id_length = 16
     client_secret_hash_length = 32
-    mobile_client_secret_hash_length = 32
     issued_at_length = 8
     expires_at_length = 8
     impersonation_info_length = 1
@@ -38,8 +36,8 @@ class Token(TokenInterface):
         bytes_wrote = 0
 
         bin_token = bytearray(cls.token_id_length+cls.refresh_token_id_length+cls.tenant_id_length+cls.user_id_length +
-                              cls.client_id_length+cls.mobile_client_id_length+cls.user_session_id_length +
-                              cls.client_secret_hash_length+cls.mobile_client_secret_hash_length+cls.issued_at_length +
+                              cls.client_id_length+cls.user_session_id_length +
+                              cls.client_secret_hash_length+cls.issued_at_length +
                               cls.expires_at_length+cls.impersonation_info_length+cls.token_type_length)
 
         bin_token[bytes_wrote:bytes_wrote + cls.token_id_length] = token.token_id.bytes
@@ -57,17 +55,11 @@ class Token(TokenInterface):
         bin_token[bytes_wrote:bytes_wrote+cls.client_id_length] = token.client_id.bytes
         bytes_wrote += cls.client_id_length
 
-        bin_token[bytes_wrote:bytes_wrote+cls.mobile_client_id_length] = token.mobile_client_id.bytes
-        bytes_wrote += cls.mobile_client_id_length
-
         bin_token[bytes_wrote:bytes_wrote+cls.user_session_id_length] = token.user_session_id.bytes
         bytes_wrote += cls.user_session_id_length
 
         bin_token[bytes_wrote:bytes_wrote+cls.client_secret_hash_length] = token.client_secret_hash
         bytes_wrote += cls.client_secret_hash_length
-
-        bin_token[bytes_wrote:bytes_wrote+cls.mobile_client_secret_hash_length] = token.mobile_client_secret_hash
-        bytes_wrote += cls.mobile_client_secret_hash_length
 
         bin_token[bytes_wrote:bytes_wrote+cls.issued_at_length] = token.issued_at.to_bytes(cls.issued_at_length, 'big')
         bytes_wrote += cls.issued_at_length
@@ -105,17 +97,11 @@ class Token(TokenInterface):
         obj.client_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read+cls.client_id_length])
         bytes_read += cls.client_id_length
 
-        obj.mobile_client_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read+cls.mobile_client_id_length])
-        bytes_read += cls.mobile_client_id_length
-
         obj.user_session_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read+cls.user_session_id_length])
         bytes_read += cls.user_session_id_length
 
         obj.client_secret_hash = plaintext[bytes_read:bytes_read+cls.client_secret_hash_length]
         bytes_read += cls.client_secret_hash_length
-
-        obj.mobile_client_secret_hash = plaintext[bytes_read:bytes_read+cls.mobile_client_secret_hash_length]
-        bytes_read += cls.mobile_client_secret_hash_length
 
         obj.issued_at = int.from_bytes(plaintext[bytes_read:bytes_read+cls.issued_at_length], 'big')
         bytes_read += cls.issued_at_length
@@ -168,10 +154,8 @@ class Token(TokenInterface):
         self._tenant_id = uuid.UUID(hex='0'*32)
         self._user_id = uuid.UUID(hex='0'*32)
         self._client_id = uuid.UUID(hex='0'*32)
-        self._mobile_client_id = uuid.UUID(hex='0'*32)
         self._user_session_id = uuid.UUID(hex='0'*32)
         self._client_secret_hash = bytes(32)
-        self._mobile_client_secret_hash = bytes(32)
         self._issued_at = 0
         self._expires_at = 0
         self._impersonation_info = 0
@@ -222,15 +206,6 @@ class Token(TokenInterface):
     def client_id(self, cid):
         self._client_id = cid
 
-    # Mobile Client id getter and setter
-    @property
-    def mobile_client_id(self):
-        return self._mobile_client_id
-
-    @mobile_client_id.setter
-    def mobile_client_id(self, m_cid):
-        self._mobile_client_id = m_cid
-
     # User session id getter and setter
     @property
     def user_session_id(self):
@@ -259,15 +234,6 @@ class Token(TokenInterface):
     @client_secret_hash.setter
     def client_secret_hash(self, h):
         self._client_secret_hash = h
-
-    # Client secret hash getter and setter
-    @property
-    def mobile_client_secret_hash(self):
-        return self._mobile_client_secret_hash
-
-    @mobile_client_secret_hash.setter
-    def mobile_client_secret_hash(self, h):
-        self._mobile_client_secret_hash = h
 
     # is impersonated getter and setter
     @property
@@ -321,17 +287,6 @@ class Token(TokenInterface):
             self._impersonation_info &= (~TOKEN_IMPERSONATION_IS_IMPERSONATED)
 
     @property
-    def is_mobile(self):
-        return (self._token_type & TOKEN_TYPE_MOBILE) == TOKEN_TYPE_MOBILE
-
-    @is_mobile.setter
-    def is_mobile(self, v):
-        if v:
-            self._token_type |= TOKEN_TYPE_MOBILE
-        else:
-            self._token_type &= (~TOKEN_TYPE_MOBILE)
-
-    @property
     def is_web(self):
         return (self._token_type & TOKEN_TYPE_WEB) == TOKEN_TYPE_WEB
 
@@ -359,13 +314,11 @@ class Token(TokenInterface):
             'refresh_token_id': self.refresh_token_id,
             'user_id': self.user_id,
             'client_id': self.client_id,
-            'mobile_client_id': self.mobile_client_id,
 
             'user_session_id': self.user_session_id,
 
             'token_type': self.token_type,
             'client_secret_hash': self.client_secret_hash,
-            'mobile_client_secret_hash': self.mobile_client_secret_hash,
 
             'impersonation_info': self.impersonation_info,
             'issued_at': self.issued_at,

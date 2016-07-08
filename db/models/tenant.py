@@ -16,6 +16,7 @@ class Tenant(Base):
 
     organizations = relationship('Organization', back_populates='tenant')
     providers = relationship('Provider', back_populates='tenant')
+    users = relationship('User', back_populates='tenant')
 
     tenant_extra_data = relationship('TenantExtraData', back_populates='tenant')
 

@@ -5,14 +5,13 @@ from db.meta import Base
 from db.utils import guid
 
 
-class WebClient(Base):
-    __tablename__ = 'web_clients'
+class Client(Base):
+    __tablename__ = 'clients'
     id = Column(guid.GUID(), primary_key=True)
     secret_hash = Column(String(64), nullable=False)
     redirect_uris = Column(String, nullable=False)
     provider_restrictions_class = Column(String, nullable=True)
 
-    web_oauth_2_codes = relationship('WebOAuth2Code', back_populates='web_client')
-    web_user_sessions = relationship('WebUserSession', back_populates='web_client')
+    oauth_2_codes = relationship('OAuth2Code', back_populates='client')
+    user_sessions = relationship('UserSession', back_populates='client')
 
-    mobile_clients = relationship('MobileClient', back_populates='web_client')
