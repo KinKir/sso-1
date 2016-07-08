@@ -14,4 +14,5 @@ class Client(Base):
 
     oauth_2_codes = relationship('OAuth2Code', back_populates='client')
     user_sessions = relationship('UserSession', back_populates='client')
+    refresh_token_sessions = relationship('RefreshTokenSession', back_populates='client')
 

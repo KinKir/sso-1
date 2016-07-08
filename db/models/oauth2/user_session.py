@@ -21,3 +21,6 @@ class UserSession(Base):
 
     user_id = Column(guid.GUID(), ForeignKey('users.id'), nullable=False)
     user = relationship('User', back_populates='sessions')
+
+    refresh_token_session_id = Column(guid.GUID(), ForeignKey('refresh_token_sessions.id'), nullable=False)
+    refresh_token_session = relationship('RefreshTokenSession', back_populates='user_sessions')
