@@ -14,5 +14,10 @@ class OAuth2Code(Base):
     expires_at = Column(BigInteger, nullable=False)
     created_at = Column(BigInteger, nullable=False)
 
+    redirect_uri = Column(String(2000), nullable=False)
+
     client_id = Column(guid.GUID(), ForeignKey('clients.id'), nullable=False)
     client = relationship('Client', back_populates='oauth_2_codes')
+
+    user_id = Column(guid.GUID(), ForeignKey('users.id'), nullable=False)
+    user = relationship('User', back_populates='oauth_2_codes')

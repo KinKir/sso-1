@@ -33,3 +33,5 @@ class User(Base):
 
     refresh_token_sessions = relationship('RefreshTokenSession', back_populates='user')
 
+    oauth_2_codes = relationship('OAuth2Code', back_populates='user')
+
