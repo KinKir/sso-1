@@ -19,5 +19,6 @@ class RefreshTokenSession(Base):
     user_id = Column(guid.GUID(), ForeignKey('users.id'), nullable=False)
     user = relationship('User', back_populates='refresh_token_sessions')
 
-    user_sessions = relationship('UserSession', back_populates='refresh_token_session')
+    user_sessions = relationship('UserSession', back_populates='refresh_token_session',
+                                 cascade="all, delete, delete-orphan")
 
