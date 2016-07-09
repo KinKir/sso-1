@@ -25,7 +25,7 @@ class User(Base):
     tenant_id = Column(guid.GUID(), ForeignKey('tenants.id'), nullable=False)
     tenant = relationship('Tenant', back_populates='users')
 
-    user_accounts = relationship('UserAccount', back_populates='user')
+    user_accounts = relationship('UserAccount', back_populates='user', cascade="all, delete, delete-orphan")
 
     organizations = relationship('Organization', secondary=user_organization_association, back_populates='users')
 
