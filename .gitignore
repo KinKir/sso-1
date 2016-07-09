@@ -86,4 +86,7 @@ ENV/
 # Rope project settings
 .ropeproject
 
+# Alembic ini
+alembic.ini
+
 .DS_Store
