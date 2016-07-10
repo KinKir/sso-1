@@ -1,6 +1,10 @@
-from db.models.oauth2.oauth_2_code import OAUTH_2_CODE_SIZE, OAuth2Code
+from db.models.oauth2.oauth_2_code import OAUTH_2_CODE_SIZE, OAuth2Code, DEFAULT_EXPIRATION_TIME_DELTA
 from utils import random_string_generator
 from lib.managers.base import Manager
+from sqlalchemy import and_
+
+import time
+import math
 
 
 class OAuth2CodeManager(Manager):
@@ -17,9 +21,24 @@ class OAuth2CodeManager(Manager):
         self.session.add(instance)
         return instance
 
-    def use_auth_code(self, auth_code, destroy=True):
-        pass
+    def use_auth_code(self, auth_code, redirect_uri, client_id, destroy=True):
+        current_time = math.floor(time.time())
+        expiration_time = current_time + DEFAULT_EXPIRATION_TIME_DELTA
+        instance = self.session.query(OAuth2Code).\
+            filter(and_(OAuth2Code.code == auth_code, OAuth2Code.expires_at > expiration_time,
+                        OAuth2Code.redirect_uri == redirect_uri,
+                        OAuth2Code.client_id == client_id))\
+            .one_or_none()
 
-    def destroy_auth_code(self, instance_id):
-        pass
+        if instance is None:
+            return None
+        user_id = instance.user_id
+
+        if destroy:
+            self.destroy_auth_code(instance)
+
+        return user_id
+
+    def destroy_auth_code(self, instance):
+        self.session.delete(instance)
 
