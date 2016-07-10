@@ -7,9 +7,9 @@ import time
 import math
 
 
-class OAuth2CodeManager(Manager):
+class CodeManager(Manager):
 
-    def create_auth_code(self, client_id, user_id, redirect_uri):
+    def create_code(self, client_id, user_id, redirect_uri):
         code = random_string_generator(OAUTH_2_CODE_SIZE)
 
         instance = OAuth2Code()
@@ -21,7 +21,7 @@ class OAuth2CodeManager(Manager):
         self.session.add(instance)
         return instance
 
-    def use_auth_code(self, auth_code, redirect_uri, client_id, destroy=True):
+    def use_code(self, auth_code, redirect_uri, client_id, destroy=True):
         current_time = math.floor(time.time())
         expiration_time = current_time + DEFAULT_EXPIRATION_TIME_DELTA
         instance = self.session.query(OAuth2Code).\
@@ -35,10 +35,10 @@ class OAuth2CodeManager(Manager):
         user_id = instance.user_id
 
         if destroy:
-            self.destroy_auth_code(instance)
+            self.destroy_code(instance)
 
         return user_id
 
-    def destroy_auth_code(self, instance):
+    def destroy_code(self, instance):
         self.session.delete(instance)
 
