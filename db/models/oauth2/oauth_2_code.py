@@ -9,6 +9,9 @@ OAUTH_2_CODE_SIZE = 256
 
 DEFAULT_EXPIRATION_TIME_DELTA = 5*60
 
+# Impersonation flags
+TOKEN_IMPERSONATION_IS_IMPERSONATED = 2
+
 
 class OAuth2Code(Base):
     __tablename__ = 'oauth_2_codes'
@@ -19,6 +22,8 @@ class OAuth2Code(Base):
     created_at = Column(BigInteger, nullable=False)
 
     redirect_uri = Column(String(2000), nullable=False)
+
+    impersonation_info = Column(BigInteger, nullable=False)
 
     client_id = Column(guid.GUID(), ForeignKey('clients.id'), nullable=False)
     client = relationship('Client', back_populates='oauth_2_codes')
