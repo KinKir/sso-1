@@ -1,7 +1,7 @@
-from lib.user_token.common import TokenInterface
-from lib.user_token.v1.packer import pack, unpack
-from lib.user_token.v1.coder import encode, decode
-from lib.user_token.v1.cryptor import encrypt, decrypt
+from lib.oauth_2_token.common import TokenInterface
+from lib.oauth_2_token.v1.packer import pack, unpack
+from lib.oauth_2_token.v1.coder import encode, decode
+from lib.oauth_2_token.v1.cryptor import encrypt, decrypt
 
 import uuid
 
@@ -161,7 +161,7 @@ class Token(TokenInterface):
         self._impersonation_info = 0
         self._token_type = 0
 
-    # user_token id getter and setter
+    # oauth_2_token id getter and setter
     @property
     def token_id(self):
         return self._token_id
@@ -170,7 +170,7 @@ class Token(TokenInterface):
     def token_id(self, tid):
         self._token_id = tid
 
-    # refresh user_token id getter and setter (Only there if this user_token is refresh user_token)
+    # refresh oauth_2_token id getter and setter (Only there if this oauth_2_token is refresh oauth_2_token)
     @property
     def refresh_token_id(self):
         return self._refresh_token_id

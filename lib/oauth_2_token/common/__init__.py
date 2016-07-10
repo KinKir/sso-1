@@ -24,7 +24,7 @@ class TokenInterface(metaclass=ABCMeta):
     def generate_mobile_client_secret_hash(cls, secret):
         pass
 
-    # user_token id getter and setter
+    # oauth_2_token id getter and setter
     @property
     @abstractmethod
     def token_id(self):
@@ -35,7 +35,7 @@ class TokenInterface(metaclass=ABCMeta):
     def token_id(self, tid):
         pass
 
-    # refresh user_token id getter and setter (Only there if this user_token is refresh user_token)
+    # refresh oauth_2_token id getter and setter (Only there if this oauth_2_token is refresh oauth_2_token)
     @property
     @abstractmethod
     def refresh_token_id(self):
