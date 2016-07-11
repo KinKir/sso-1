@@ -1,4 +1,4 @@
-from db.models.oauth2.oauth_2_code import OAuth2Code, DEFAULT_EXPIRATION_TIME_DELTA
+from db.models.oauth2.code import OAuth2Code, DEFAULT_EXPIRATION_TIME_DELTA
 from utils import random_string_generator
 from lib.managers.base import Manager
 from sqlalchemy import and_

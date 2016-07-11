@@ -1,4 +1,5 @@
 from lib.managers.base import Manager
+from db.models.oauth2.user_session import OAuth2UserSession
 
 
 class UserSessionManager(Manager):
