@@ -8,7 +8,7 @@ from db.utils import guid
 class Client(Base):
     __tablename__ = 'clients'
     id = Column(guid.GUID(), primary_key=True)
-    secret_hash = Column(String(64), nullable=False)
+    secret_hash = Column(String(512), nullable=False)
     redirect_uris = Column(String, nullable=False)
     provider_restrictions_class = Column(String, nullable=True)
 
