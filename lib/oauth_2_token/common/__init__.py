@@ -48,6 +48,16 @@ class TokenInterface(metaclass=ABCMeta):
 
     @property
     @abstractmethod
+    def auth_session_id(self):
+        pass
+
+    @auth_session_id.setter
+    @abstractmethod
+    def auth_session_id(self, aid):
+        pass
+
+    @property
+    @abstractmethod
     def tenant_id(self):
         pass
 
@@ -172,6 +182,16 @@ class TokenInterface(metaclass=ABCMeta):
     @is_web.setter
     @abstractmethod
     def is_web(self, v):
+        pass
+
+    @property
+    @abstractmethod
+    def is_tied_to_auth_session(self):
+        pass
+
+    @is_tied_to_auth_session.setter
+    @abstractmethod
+    def is_tied_to_auth_session(self, v):
         pass
 
     @abstractmethod

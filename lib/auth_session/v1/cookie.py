@@ -29,7 +29,6 @@ class Cookie(object):
     # Field order and their respective size
     tenant_id_length = 16
     user_id_length = 16
-    user_session_id_length = 16
     provider_id_length = 16
     user_data_pointer_length = 16
     auth_session_id_length = 16
@@ -46,8 +45,8 @@ class Cookie(object):
     def _tobin(cls, cookie):
         bytes_wrote = 0
 
-        bin_cookie = bytearray(cls.tenant_id_length + cls.user_id_length + cls.user_session_id_length +
-                               cls.provider_id_length + cls.user_data_pointer_length + cls.auth_session_id_length +
+        bin_cookie = bytearray(cls.tenant_id_length + cls.user_id_length+cls.provider_id_length +
+                               cls.user_data_pointer_length + cls.auth_session_id_length +
                                cls.auth_session_type_length + cls.auth_session_stage_length + cls.client_id_length +
                                cls.client_secret_hash_length + cls.issued_at_length + cls.expires_at_length +
                                cls.logout_token_length + cls.impersonation_info_length)
@@ -57,9 +56,6 @@ class Cookie(object):
 
         bin_cookie[bytes_wrote:bytes_wrote + cls.user_id_length] = cookie.user_id.bytes
         bytes_wrote += cls.user_id_length
-
-        bin_cookie[bytes_wrote:bytes_wrote + cls.user_session_id_length] = cookie.user_session_id.bytes
-        bytes_wrote += cls.user_session_id_length
 
         bin_cookie[bytes_wrote:bytes_wrote + cls.provider_id_length] = cookie.provider_id.bytes
         bytes_wrote += cls.provider_id_length
@@ -111,9 +107,6 @@ class Cookie(object):
 
         obj.user_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read+cls.user_id_length])
         bytes_read += cls.user_id_length
-
-        obj.user_session_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read + cls.user_session_id_length])
-        bytes_read += cls.user_session_id_length
 
         obj.provider_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read+cls.provider_id_length])
         bytes_read += cls.provider_id_length
@@ -176,7 +169,6 @@ class Cookie(object):
     def __init__(self):
         self._tenant_id = uuid.UUID(hex='0' * 32)
         self._user_id = uuid.UUID(hex='0'*32)
-        self._user_session_id = uuid.UUID(hex='0'*32)
         self._provider_id = uuid.UUID(hex='0'*32)
         self._user_data_pointer = uuid.UUID(hex='0'*32)
         self._auth_session_id = uuid.UUID(hex='0' * 32)
@@ -201,15 +193,6 @@ class Cookie(object):
     @property
     def user_id(self):
         return self._user_id
-
-    # User session id getter and setter
-    @property
-    def user_session_id(self):
-        return self._user_session_id
-
-    @user_session_id.setter
-    def user_session_id(self, u_sid):
-        self._user_session_id = u_sid
 
     @user_id.setter
     def user_id(self, uid):
