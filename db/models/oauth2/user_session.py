@@ -6,8 +6,8 @@ from db.meta import Base
 from db.utils import guid
 
 
-class UserSession(Base):
-    __tablename__ = 'user_sessions'
+class OAuth2UserSession(Base):
+    __tablename__ = 'oauth_2_user_sessions'
 
     id = Column(guid.GUID, primary_key=True)
     expires_at = Column(BigInteger, nullable=False)
@@ -16,11 +16,14 @@ class UserSession(Base):
 
     attached_to_auth_session = Column(Boolean, nullable=False)
 
-    client_id = Column(guid.GUID(), ForeignKey('clients.id'), nullable=False)
-    client = relationship('Client', back_populates='user_sessions')
+    client_id = Column(guid.GUID(), ForeignKey('oauth_2_clients.id'), nullable=False)
+    client = relationship('OAuth2Client', back_populates='user_sessions')
 
     user_id = Column(guid.GUID(), ForeignKey('users.id'), nullable=False)
-    user = relationship('User', back_populates='sessions')
+    user = relationship('User', back_populates='oauth_2_user_sessions')
 
-    refresh_token_session_id = Column(guid.GUID(), ForeignKey('refresh_token_sessions.id'), nullable=False)
-    refresh_token_session = relationship('RefreshTokenSession', back_populates='user_sessions')
+    refresh_token_session_id = Column(guid.GUID(), ForeignKey('oauth_2_refresh_token_sessions.id'), nullable=False)
+    refresh_token_session = relationship('OAuth2RefreshTokenSession', back_populates='user_sessions')
+
+    auth_session_id = Column(guid.GUID(), ForeignKey('auth_sessions.id'), nullable=True)
+    auth_session = relationship('AuthSession', back_populates='oauth_2_user_sessions')

@@ -29,9 +29,14 @@ class User(Base):
 
     organizations = relationship('Organization', secondary=user_organization_association, back_populates='users')
 
-    sessions = relationship('UserSession', back_populates='user')
+    # OAuth2 specific
+    oauth_2_user_sessions = relationship('OAuth2UserSession', back_populates='user')
 
-    refresh_token_sessions = relationship('RefreshTokenSession', back_populates='user')
+    oauth_2_refresh_token_sessions = relationship('OAuth2RefreshTokenSession', back_populates='user')
 
     oauth_2_codes = relationship('OAuth2Code', back_populates='user')
+
+    # Auth session
+    auth_sessions = relationship('AuthSession', back_populates='user')
+
 

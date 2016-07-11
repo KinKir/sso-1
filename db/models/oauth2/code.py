@@ -23,8 +23,8 @@ class OAuth2Code(Base):
 
     impersonation_info = Column(BigInteger, nullable=False)
 
-    client_id = Column(guid.GUID(), ForeignKey('clients.id'), nullable=False)
-    client = relationship('Client', back_populates='oauth_2_codes')
+    client_id = Column(guid.GUID(), ForeignKey('oauth_2_clients.id'), nullable=False)
+    client = relationship('OAuth2Client', back_populates='codes')
 
     user_id = Column(guid.GUID(), ForeignKey('users.id'), nullable=False)
     user = relationship('User', back_populates='oauth_2_codes')

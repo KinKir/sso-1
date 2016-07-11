@@ -1,6 +1,7 @@
 from db.models.oauth2 import *
 from db.models.providers import *
 
+from db.models.auth_session import AuthSession
 from db.models.organization import Organization
 from db.models.tenant import Tenant
 from db.models.tenant_email_patterns import TenantEmailPattern
