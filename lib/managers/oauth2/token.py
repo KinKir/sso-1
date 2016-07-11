@@ -1,10 +1,13 @@
 from lib.managers.base import Manager
-from db.models.oauth2.user_session import UserSession
-from db.models.oauth2.refresh_token_session import RefreshTokenSession
+from lib.managers.oauth2.refresh_token_session import RefreshTokenSessionManager
+from lib.managers.oauth2.user_session import UserSessionManager
 
 
 class TokenManager(Manager):
-    def create_token(self, client, user, is_refresh_token=False):
+    def create_user_token(self, client, user, refresh_token_session_id, create_session=True):
+        pass
+
+    def create_refresh_token(self, client, user, create_session=True):
         pass
 
     def revoke_token(self, token):
