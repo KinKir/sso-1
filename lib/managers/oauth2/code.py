@@ -1,4 +1,4 @@
-from db.models.oauth2.code import OAuth2Code, DEFAULT_EXPIRATION_TIME_DELTA
+from db.models.oauth2.code import OAuth2Code
 from utils import random_string_generator
 from lib.managers.base import Manager
 from sqlalchemy import and_
@@ -12,6 +12,8 @@ OAUTH_2_CODE_SIZE = 1024
 
 
 class CodeManager(Manager):
+
+    DEFAULT_EXPIRATION_TIME_DELTA = 5*60
 
     @staticmethod
     def _hash_code(auth_code):
@@ -28,12 +30,15 @@ class CodeManager(Manager):
         instance.redirect_uri = redirect_uri
         instance.code_hash = self._hash_code(auth_code)
 
+        instance.created_at = math.floor(time.time())
+        instance.expires_at = instance.created_at + self.DEFAULT_EXPIRATION_TIME_DELTA + 1
+
         self.session.add(instance)
         return instance, auth_code
 
     def use_code(self, auth_code, redirect_uri, client_id, destroy=True):
         current_time = math.floor(time.time())
-        expiration_time = current_time + DEFAULT_EXPIRATION_TIME_DELTA
+        expiration_time = current_time + self.DEFAULT_EXPIRATION_TIME_DELTA
         code_hash = self._hash_code(auth_code)
         instance = self.session.query(OAuth2Code).\
             filter(and_(OAuth2Code.code_hash == code_hash, OAuth2Code.expires_at > expiration_time,

@@ -5,8 +5,6 @@ from sqlalchemy.orm import relationship
 from db.meta import Base
 from db.utils import guid
 
-DEFAULT_EXPIRATION_TIME_DELTA = 5*60
-
 # Impersonation flags
 IMPERSONATION_INFO_IS_IMPERSONATED = 2
 
