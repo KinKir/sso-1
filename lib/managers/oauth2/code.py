@@ -51,10 +51,15 @@ class CodeManager(Manager):
         user_id = instance.user_id
 
         if destroy:
-            self.destroy_code(instance)
+            self.destroy_code(instance.id)
 
         return user_id
 
-    def destroy_code(self, instance):
-        self.session.delete(instance)
+    def destroy_code(self, auth_code_id):
+        instance = self.session.query(OAuth2Code).\
+            filter(OAuth2Code.id == auth_code_id).one_or_none()
+        if instance is not None:
+            self.session.delete(instance)
+        return instance
+
 

@@ -21,6 +21,8 @@ class RefreshTokenSessionManager(Manager):
 
         self.session.add(instance)
 
+        return instance
+
     def get_refresh_token_sessions(self, client_id, user_id):
         query = self.session.query(OAuth2RefreshTokenSession)
 
@@ -40,5 +42,7 @@ class RefreshTokenSessionManager(Manager):
 
     def delete_refresh_token_session(self, refresh_token_session_id):
         instance = self.get_refresh_token_session(refresh_token_session_id)
-        self.session.delete(instance)
+        if instance is not None:
+            self.session.delete(instance)
+        return instance
 
