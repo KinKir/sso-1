@@ -2,14 +2,22 @@ from lib.managers.base import Manager
 from lib.managers.oauth2.refresh_token_session import RefreshTokenSessionManager
 from lib.managers.oauth2.user_session import UserSessionManager
 
+from lib.oauth_2_token.v1.token import Token as Token_v1
+
 
 class TokenManager(Manager):
 
     VERSION_SEPARATOR = '_'
 
-    allowed_encryption_versions = {
-        'v1': ''
+    version_map = {
+        'v1': Token_v1
     }
+
+    allowed_token_versions_for_encryption = ['v1']
+
+    allowed_token_versions_for_decryption = ['v1']
+
+    latest_version = 'v1'
 
     def __init__(self, session):
         super(TokenManager, self).__init__(session)
