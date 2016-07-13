@@ -5,6 +5,8 @@ from sqlalchemy import and_
 
 from utils import get_current_time, generate_random_uuid
 
+_sentinel = object()
+
 
 class RefreshTokenSessionManager(Manager):
 
@@ -23,18 +25,21 @@ class RefreshTokenSessionManager(Manager):
 
         return instance
 
-    def get_refresh_token_sessions(self, client_id, user_id):
+    def get_refresh_token_sessions(self, client_id=_sentinel, user_id=_sentinel):
         query = self.session.query(OAuth2RefreshTokenSession)
 
-        if client_id is not None and user_id is not None:
-            query.filter(and_(OAuth2RefreshTokenSession.client_id == client_id,
-                              OAuth2RefreshTokenSession == user_id))
-        elif client_id is not None:
-            query.filter(OAuth2RefreshTokenSession.client_id == client_id)
-        elif user_id is not None:
-            query.filter(OAuth2RefreshTokenSession.user_id == user_id)
+        if client_id is None and user_id is None:
+            return query.all()
 
-        return query.all()
+        and_arguments = []
+
+        if client_id is not _sentinel:
+            and_arguments.append(OAuth2RefreshTokenSession.client_id == client_id)
+
+        if user_id is not _sentinel:
+            and_arguments.append(OAuth2RefreshTokenSession.user_id == user_id)
+
+        return query.filter(and_(*and_arguments)).all()
 
     def get_refresh_token_session(self, refresh_token_session_id):
         return self.session.query(OAuth2RefreshTokenSession).\

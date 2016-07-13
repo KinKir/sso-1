@@ -1,6 +1,9 @@
 from lib.managers.base import Manager
 from db.models.oauth2.user_session import OAuth2UserSession
 from utils import random_string_generator, get_current_time, generate_random_uuid
+from sqlalchemy import and_
+
+_sentinel = object()
 
 
 class UserSessionManager(Manager):
@@ -26,8 +29,24 @@ class UserSessionManager(Manager):
         self.session.add(instance)
         return instance
 
-    def get_user_sessions(self, user_id, refresh_token_session_id, auth_session_id):
-        pass
+    def get_user_sessions(self, user_id=_sentinel, refresh_token_session_id=_sentinel, auth_session_id=_sentinel):
+        query = self.session.query(OAuth2UserSession)
+
+        if user_id is None and refresh_token_session_id is None and auth_session_id is None:
+            return query.all()
+
+        and_arguments = []
+
+        if user_id is not _sentinel:
+            and_arguments.append(OAuth2UserSession.user_id == user_id)
+
+        if refresh_token_session_id is not _sentinel:
+            and_arguments.append(OAuth2UserSession.refresh_token_session_id == refresh_token_session_id)
+
+        if auth_session_id is not _sentinel:
+            and_arguments.append(OAuth2UserSession.auth_session_id == auth_session_id)
+
+        return query.filter(and_(and_arguments))
 
     def get_user_session(self, user_session_id):
         return self.session.query(OAuth2UserSession). \
