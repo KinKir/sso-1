@@ -6,6 +6,8 @@ from db.models.oauth2.refresh_token_session import OAuth2RefreshTokenSession
 
 from sqlalchemy import and_
 
+from utils import get_current_time, generate_random_uuid
+
 
 class RefreshTokenSessionManager(Manager):
 
@@ -14,9 +16,10 @@ class RefreshTokenSessionManager(Manager):
 
     def create_refresh_token_session(self, client_id, user_id):
         instance = OAuth2RefreshTokenSession()
+        instance.id = generate_random_uuid()
         instance.client_id = client_id
         instance.user_id = user_id
-        instance.created_at = math.floor(time.time())
+        instance.created_at = get_current_time()
         instance.expires_at = instance.created_at + self.DEFAULT_EXPIRATION_TIME_DELTA
 
         self.session.add(instance)

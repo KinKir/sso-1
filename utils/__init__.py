@@ -1,5 +1,16 @@
 import string
 import random
+import uuid
+import math
+import time
+
+
+def get_current_time():
+    return math.floor(time.time())
+
+
+def generate_random_uuid():
+    return uuid.uuid4()
 
 
 def random_string_generator(size=6, chars=string.ascii_uppercase + string.digits):

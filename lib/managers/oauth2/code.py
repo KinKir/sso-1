@@ -5,15 +5,14 @@ from sqlalchemy import and_
 
 import hashlib
 
-import time
-import math
-
-OAUTH_2_CODE_SIZE = 1024
+from utils import generate_random_uuid, get_current_time
 
 
 class CodeManager(Manager):
 
     DEFAULT_EXPIRATION_TIME_DELTA = 5*60
+
+    OAUTH_2_CODE_SIZE = 1024
 
     @staticmethod
     def _hash_code(auth_code):
@@ -22,22 +21,23 @@ class CodeManager(Manager):
         return hash_obj.digest().hex()
 
     def create_code(self, client_id, user_id, redirect_uri):
-        auth_code = random_string_generator(OAUTH_2_CODE_SIZE)
+        auth_code = random_string_generator(self.OAUTH_2_CODE_SIZE)
 
         instance = OAuth2Code()
+        instance.id = generate_random_uuid()
         instance.client_id = client_id
         instance.user_id = user_id
         instance.redirect_uri = redirect_uri
         instance.code_hash = self._hash_code(auth_code)
 
-        instance.created_at = math.floor(time.time())
+        instance.created_at = get_current_time()
         instance.expires_at = instance.created_at + self.DEFAULT_EXPIRATION_TIME_DELTA + 1
 
         self.session.add(instance)
         return instance, auth_code
 
     def use_code(self, auth_code, redirect_uri, client_id, destroy=True):
-        current_time = math.floor(time.time())
+        current_time = get_current_time()
         expiration_time = current_time + self.DEFAULT_EXPIRATION_TIME_DELTA
         code_hash = self._hash_code(auth_code)
         instance = self.session.query(OAuth2Code).\
