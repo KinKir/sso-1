@@ -1,6 +1,3 @@
-import math
-import time
-
 from lib.managers.base import Manager
 from db.models.oauth2.refresh_token_session import OAuth2RefreshTokenSession
 
