@@ -32,7 +32,7 @@ class UserSessionManager(Manager):
     def get_user_sessions(self, user_id=_sentinel, refresh_token_session_id=_sentinel, auth_session_id=_sentinel):
         query = self.session.query(OAuth2UserSession)
 
-        if user_id is None and refresh_token_session_id is None and auth_session_id is None:
+        if user_id is _sentinel and refresh_token_session_id is _sentinel and auth_session_id is _sentinel:
             return query.all()
 
         and_arguments = []

@@ -28,7 +28,7 @@ class RefreshTokenSessionManager(Manager):
     def get_refresh_token_sessions(self, client_id=_sentinel, user_id=_sentinel):
         query = self.session.query(OAuth2RefreshTokenSession)
 
-        if client_id is None and user_id is None:
+        if client_id is _sentinel and user_id is _sentinel:
             return query.all()
 
         and_arguments = []
