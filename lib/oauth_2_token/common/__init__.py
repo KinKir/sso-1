@@ -38,12 +38,12 @@ class TokenInterface(metaclass=ABCMeta):
     # refresh oauth_2_token id getter and setter (Only there if this oauth_2_token is refresh oauth_2_token)
     @property
     @abstractmethod
-    def refresh_token_id(self):
+    def refresh_token_session_id(self):
         pass
 
-    @refresh_token_id.setter
+    @refresh_token_session_id.setter
     @abstractmethod
-    def refresh_token_id(self, tid):
+    def refresh_token_session_id(self, tid):
         pass
 
     @property

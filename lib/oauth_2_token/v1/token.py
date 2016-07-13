@@ -22,7 +22,7 @@ class Token(TokenInterface):
 
     # Field order and their respective size
     token_id_length = 16
-    refresh_token_id_length = 16
+    refresh_token_session_id_length = 16
     auth_session_id_length = 16
     tenant_id_length = 16
     user_id_length = 16
@@ -38,17 +38,17 @@ class Token(TokenInterface):
     def _tobin(cls, token):
         bytes_wrote = 0
 
-        bin_token = bytearray(cls.token_id_length+cls.refresh_token_id_length+cls.auth_session_id_length +
-                              cls.tenant_id_length+cls.user_id_length +
-                              cls.client_id_length+cls.user_session_id_length +
-                              cls.client_secret_hash_length+cls.issued_at_length +
-                              cls.expires_at_length+cls.impersonation_info_length+cls.token_type_length)
+        bin_token = bytearray(cls.token_id_length + cls.refresh_token_session_id_length + cls.auth_session_id_length +
+                              cls.tenant_id_length + cls.user_id_length +
+                              cls.client_id_length + cls.user_session_id_length +
+                              cls.client_secret_hash_length + cls.issued_at_length +
+                              cls.expires_at_length + cls.impersonation_info_length + cls.token_type_length)
 
         bin_token[bytes_wrote:bytes_wrote + cls.token_id_length] = token.token_id.bytes
         bytes_wrote += cls.token_id_length
 
-        bin_token[bytes_wrote:bytes_wrote + cls.refresh_token_id_length] = token.refresh_token_id.bytes
-        bytes_wrote += cls.refresh_token_id_length
+        bin_token[bytes_wrote:bytes_wrote + cls.refresh_token_session_id_length] = token.refresh_token_session_id.bytes
+        bytes_wrote += cls.refresh_token_session_id_length
 
         bin_token[bytes_wrote:bytes_wrote + cls.auth_session_id_length] = token.auth_session_id.bytes
         bytes_wrote += cls.auth_session_id_length
@@ -92,8 +92,8 @@ class Token(TokenInterface):
         obj.token_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read + cls.token_id_length])
         bytes_read += cls.token_id_length
 
-        obj.refresh_token_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read + cls.refresh_token_id_length])
-        bytes_read += cls.refresh_token_id_length
+        obj.refresh_token_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read + cls.refresh_token_session_id_length])
+        bytes_read += cls.refresh_token_session_id_length
 
         obj.auth_session_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read + cls.auth_session_id_length])
         bytes_read += cls.auth_session_id_length
@@ -160,7 +160,7 @@ class Token(TokenInterface):
 
     def __init__(self):
         self._token_id = uuid.UUID(hex='0'*32)
-        self._refresh_token_id = uuid.UUID(hex='0'*32)
+        self._refresh_token_session_id = uuid.UUID(hex='0' * 32)
         self._auth_session_id = uuid.UUID(hex='0'*32)
         self._tenant_id = uuid.UUID(hex='0'*32)
         self._user_id = uuid.UUID(hex='0'*32)
@@ -183,16 +183,16 @@ class Token(TokenInterface):
 
     # refresh oauth_2_token id getter and setter (Only there if this oauth_2_token is refresh oauth_2_token)
     @property
-    def refresh_token_id(self):
-        return self._refresh_token_id
+    def refresh_token_session_id(self):
+        return self._refresh_token_session_id
 
-    @refresh_token_id.setter
-    def refresh_token_id(self, rid):
-        self._refresh_token_id = rid
+    @refresh_token_session_id.setter
+    def refresh_token_session_id(self, rid):
+        self._refresh_token_session_id = rid
 
     @property
     def auth_session_id(self):
-        return self._refresh_token_id
+        return self._auth_session_id
 
     @auth_session_id.setter
     def auth_session_id(self, aid):
@@ -343,7 +343,7 @@ class Token(TokenInterface):
             'auth_session_id': self.auth_session_id,
             'tenant_id': self.tenant_id,
             'token_id': self.token_id,
-            'refresh_token_id': self.refresh_token_id,
+            'refresh_token_session_id': self.refresh_token_session_id,
             'user_id': self.user_id,
             'client_id': self.client_id,
 

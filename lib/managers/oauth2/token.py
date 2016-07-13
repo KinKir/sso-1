@@ -4,6 +4,8 @@ from lib.managers.oauth2.user_session import UserSessionManager
 
 from lib.oauth_2_token.v1.token import Token as Token_v1
 
+from utils import generate_random_uuid
+
 
 class TokenManager(Manager):
 
@@ -24,8 +26,27 @@ class TokenManager(Manager):
         self._refresh_token_session_manager = RefreshTokenSessionManager(session)
         self._user_session_manager = UserSessionManager(session)
 
-    def create_user_token(self, client, user, refresh_token_session_id, auth_session_id, create_session=True):
-        pass
+    def create_user_token(self, client, user, refresh_token_session_id, auth_session_id, tenant_id, user_session_id, create_session=True):
+        instance = self.version_map[self.latest_version]()
+
+        if instance.auth_session_id is not None:
+            instance.auth_session_id = auth_session_id
+
+        instance.token_id = generate_random_uuid()
+        instance.user_id = user.id
+        instance.client_id = client.id
+        instance.client_secret_hash = client.secret_hash
+        instance.refresh_token_session_id = refresh_token_session_id
+        instance.tenant_id = tenant_id
+        if create_session:
+            user_session = self._user_session_manager.\
+                create_user_session(client.id, user.id, refresh_token_session_id, auth_session_id)
+            instance.user_session_id = user_session.id
+        else:
+            instance.user_session_id = user_session_id
+
+        instance.is_impersonated = False
+        instance.is_refresh_token = False
 
     def create_refresh_token(self, client, user, create_session=True):
         pass
