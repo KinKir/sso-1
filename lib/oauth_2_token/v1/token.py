@@ -7,18 +7,18 @@ import uuid
 
 import hashlib
 
-TOKEN_TYPE_MOBILE = 1
-
-TOKEN_TYPE_WEB = 2
-
-TOKEN_TYPE_REFRESH = 4
-
-TOKEN_TYPE_TIED_TO_AUTH_SESSION = 8
-
-TOKEN_IMPERSONATION_IS_IMPERSONATED = 2
-
 
 class Token(TokenInterface):
+
+    TOKEN_TYPE_MOBILE = 1
+
+    TOKEN_TYPE_WEB = 2
+
+    TOKEN_TYPE_REFRESH = 4
+
+    TOKEN_TYPE_TIED_TO_AUTH_SESSION = 8
+
+    TOKEN_IMPERSONATION_IS_IMPERSONATED = 2
 
     # Field order and their respective size
     token_id_length = 16
@@ -285,54 +285,55 @@ class Token(TokenInterface):
 
     @property
     def is_refresh_token(self):
-        return (self._token_type & TOKEN_TYPE_REFRESH) == TOKEN_TYPE_REFRESH
+        return (self._token_type & self.TOKEN_TYPE_REFRESH) == self.TOKEN_TYPE_REFRESH
 
     @is_refresh_token.setter
     def is_refresh_token(self, v):
         if v:
-            self._token_type |= TOKEN_TYPE_REFRESH
+            self._token_type |= self.TOKEN_TYPE_REFRESH
         else:
-            self._token_type &= (~TOKEN_TYPE_REFRESH)
+            self._token_type &= (~self.TOKEN_TYPE_REFRESH)
 
     @property
     def is_impersonated(self):
-        return (self._impersonation_info & TOKEN_IMPERSONATION_IS_IMPERSONATED) == TOKEN_IMPERSONATION_IS_IMPERSONATED
+        return (self._impersonation_info & self.TOKEN_IMPERSONATION_IS_IMPERSONATED) == \
+               self.TOKEN_IMPERSONATION_IS_IMPERSONATED
 
     @is_impersonated.setter
     def is_impersonated(self, v):
         if v:
-            self._impersonation_info |= TOKEN_IMPERSONATION_IS_IMPERSONATED
+            self._impersonation_info |= self.TOKEN_IMPERSONATION_IS_IMPERSONATED
         else:
-            self._impersonation_info &= (~TOKEN_IMPERSONATION_IS_IMPERSONATED)
+            self._impersonation_info &= (~self.TOKEN_IMPERSONATION_IS_IMPERSONATED)
 
     @property
     def is_web(self):
-        return (self._token_type & TOKEN_TYPE_WEB) == TOKEN_TYPE_WEB
+        return (self._token_type & self.TOKEN_TYPE_WEB) == self.TOKEN_TYPE_WEB
 
     @is_web.setter
     def is_web(self, v):
         if v:
-            self._token_type |= TOKEN_TYPE_WEB
+            self._token_type |= self.TOKEN_TYPE_WEB
         else:
-            self._token_type &= (~TOKEN_TYPE_WEB)
+            self._token_type &= (~self.TOKEN_TYPE_WEB)
 
     @property
     def is_tied_to_auth_session(self):
-        return (self._token_type & TOKEN_TYPE_TIED_TO_AUTH_SESSION) == TOKEN_TYPE_TIED_TO_AUTH_SESSION
+        return (self._token_type & self.TOKEN_TYPE_TIED_TO_AUTH_SESSION) == self.TOKEN_TYPE_TIED_TO_AUTH_SESSION
 
     @is_tied_to_auth_session.setter
     def is_tied_to_auth_session(self, v):
         if v:
-            self._token_type |= TOKEN_TYPE_TIED_TO_AUTH_SESSION
+            self._token_type |= self.TOKEN_TYPE_TIED_TO_AUTH_SESSION
         else:
-            self._token_type &= (~TOKEN_TYPE_TIED_TO_AUTH_SESSION)
+            self._token_type &= (~self.TOKEN_TYPE_TIED_TO_AUTH_SESSION)
 
     def is_valid(self):
         if self.issued_at == 0 or self.expires_at == 0:
             return False
 
-        if self.token_type & TOKEN_TYPE_MOBILE != TOKEN_TYPE_MOBILE and \
-           self.token_type & TOKEN_TYPE_WEB != TOKEN_TYPE_WEB:
+        if self.token_type & self.TOKEN_TYPE_MOBILE != self.TOKEN_TYPE_MOBILE and \
+           self.token_type & self.TOKEN_TYPE_WEB != self.TOKEN_TYPE_WEB:
             return False
 
         return True
