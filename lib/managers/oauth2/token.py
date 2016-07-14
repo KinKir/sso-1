@@ -1,6 +1,7 @@
 from lib.managers.base import Manager
 from lib.managers.oauth2.refresh_token_session import RefreshTokenSessionManager
 from lib.managers.oauth2.user_session import UserSessionManager
+from lib.managers.keyring import KeyRingManager
 
 from lib.oauth_2_token.v1.token import Token as Token_v1
 
@@ -24,10 +25,11 @@ class TokenManager(Manager):
 
     LATEST_TOKEN_VERSION = 'v1'
 
-    def __init__(self, session):
+    def __init__(self, session, master_key):
         super(TokenManager, self).__init__(session)
         self._refresh_token_session_manager = RefreshTokenSessionManager(session)
         self._user_session_manager = UserSessionManager(session)
+        self._keyring_manager = KeyRingManager(session, master_key)
 
     def create_user_token(self, client, user, refresh_token_session_id, auth_session_id, tenant_id, user_session_id,
                           create_session=True):
@@ -56,6 +58,11 @@ class TokenManager(Manager):
 
         instance.issued_at = get_current_time()
         instance.expires_at = get_current_time() + self.DEFAULT_TOKEN_EXPIRATION_TIME_DELTA
+
+        generated_key = self._keyring_manager.generate_key()
+        serialized_token = token_cls.serialize(instance, None, lambda x: generated_key)
+        self._keyring_manager.save_key(generated_key, instance.expires_at)
+        return self._attach_token_version(self.LATEST_TOKEN_VERSION, serialized_token)
 
     def create_refresh_token(self, client, user, create_session=True):
         pass
