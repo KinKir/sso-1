@@ -1,4 +1,4 @@
-from lib.managers.base import Manager
+from lib.managers.base import BaseManager
 from db.models.oauth2.refresh_token_session import OAuth2RefreshTokenSession
 
 from sqlalchemy import and_
@@ -8,7 +8,7 @@ from utils import get_current_time, generate_random_uuid
 _sentinel = object()
 
 
-class RefreshTokenSessionManager(Manager):
+class RefreshTokenSessionManager(BaseManager):
 
     # 5 years
     DEFAULT_EXPIRATION_TIME_DELTA = 5*12*30*24*60*60

@@ -1,4 +1,4 @@
-from lib.managers.base import Manager
+from lib.managers.base import BaseManager
 from db.models.oauth2.user_session import OAuth2UserSession
 from utils import random_string_generator, get_current_time, generate_random_uuid
 from sqlalchemy import and_
@@ -6,7 +6,7 @@ from sqlalchemy import and_
 _sentinel = object()
 
 
-class UserSessionManager(Manager):
+class UserSessionManager(BaseManager):
 
     # 7 Days
     DEFAULT_EXPIRATION_TIME_DELTA = 7 * 24 * 60 * 60

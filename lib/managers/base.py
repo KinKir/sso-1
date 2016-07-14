@@ -1,4 +1,4 @@
-class Manager(object):
+class BaseManager(object):
     def __init__(self, session):
         self._session = session
 

@@ -1,6 +1,6 @@
 from db.models.oauth2.code import OAuth2Code
 from utils import random_string_generator
-from lib.managers.base import Manager
+from lib.managers.base import BaseManager
 from sqlalchemy import and_
 
 import hashlib
@@ -8,7 +8,7 @@ import hashlib
 from utils import generate_random_uuid, get_current_time
 
 
-class CodeManager(Manager):
+class CodeManager(BaseManager):
 
     DEFAULT_EXPIRATION_TIME_DELTA = 5*60
 

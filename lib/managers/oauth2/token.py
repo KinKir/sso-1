@@ -1,4 +1,4 @@
-from lib.managers.base import Manager
+from lib.managers.base import BaseManager
 from lib.managers.oauth2.refresh_token_session import RefreshTokenSessionManager
 from lib.managers.oauth2.user_session import UserSessionManager
 from lib.managers.keyring import KeyRingManager
@@ -8,7 +8,7 @@ from lib.oauth_2_token.v1.token import Token as Token_v1
 from utils import generate_random_uuid, get_current_time
 
 
-class TokenManager(Manager):
+class TokenManager(BaseManager):
 
     VERSION_SEPARATOR = '_'
 
@@ -91,9 +91,6 @@ class TokenManager(Manager):
         serialized_token = token_cls.serialize(instance, None, lambda x: generated_key)
         self._keyring_manager.save_key(generated_key, instance.expires_at)
         return self._attach_token_version(self.LATEST_TOKEN_VERSION, serialized_token)
-
-    def get_refresh_token(self, client, user):
-        pass
 
     def revoke_token(self, token):
         pass

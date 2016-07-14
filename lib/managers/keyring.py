@@ -1,4 +1,4 @@
-from lib.managers.base import Manager
+from lib.managers.base import BaseManager
 
 from cryptography.hazmat.primitives.ciphers import (
     Cipher, algorithms, modes
@@ -13,7 +13,7 @@ from db.models.key import Key
 from utils import get_current_time
 
 
-class KeyRingManager(Manager):
+class KeyRingManager(BaseManager):
 
     SALT_LENGTH = 32
 
