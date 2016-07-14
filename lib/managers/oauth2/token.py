@@ -29,7 +29,8 @@ class TokenManager(Manager):
         self._refresh_token_session_manager = RefreshTokenSessionManager(session)
         self._user_session_manager = UserSessionManager(session)
 
-    def create_user_token(self, client, user, refresh_token_session_id, auth_session_id, tenant_id, user_session_id, create_session=True):
+    def create_user_token(self, client, user, refresh_token_session_id, auth_session_id, tenant_id, user_session_id,
+                          create_session=True):
         token_cls = self.version_map[self.latest_version]
         instance = token_cls()
 

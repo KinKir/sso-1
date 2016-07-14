@@ -11,6 +11,8 @@ class Key(Base):
 
     key = Column(Binary, nullable=False)
     ref_count = Column(BigInteger, nullable=False, default=0)
+    salt = Column(Binary, nullable=False)
+    iv = Column(Binary, nullable=False)
 
     expires_at = Column(BigInteger, nullable=False)
     created_at = Column(BigInteger, nullable=False)
