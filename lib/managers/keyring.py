@@ -1,9 +1,9 @@
 from lib.managers.base import Manager
 
 
-class TokenKeyRingManager(Manager):
+class KeyRingManager(Manager):
     def __init__(self, session, master_key):
-        super(TokenKeyRingManager, self).__init__(session)
+        super(KeyRingManager, self).__init__(session)
         self._master_key = master_key
 
     def get_key(self, keyid):
