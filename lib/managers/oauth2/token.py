@@ -64,8 +64,33 @@ class TokenManager(Manager):
         self._keyring_manager.save_key(generated_key, instance.expires_at)
         return self._attach_token_version(self.LATEST_TOKEN_VERSION, serialized_token)
 
-    def create_refresh_token(self, client, user, create_session=True):
-        pass
+    def create_refresh_token(self, client, user, tenant_id, refresh_token_session_id, create_session=True):
+        token_cls = self.TOKEN_VERSION_MAP[self.LATEST_TOKEN_VERSION]
+        instance = token_cls()
+
+        instance.token_id = generate_random_uuid()
+        instance.user_id = user.id
+        instance.client_id = client.id
+        instance.client_secret_hash = client.secret_hash
+        instance.tenant_id = tenant_id
+        if create_session:
+            refresh_token_session = self._refresh_token_session_manager. \
+                create_refresh_token_session(client.id, user.id)
+            instance.refresh_token_session_id = refresh_token_session.id
+        else:
+            instance.refresh_token_session_id = refresh_token_session_id
+
+        instance.is_impersonated = False
+        instance.is_refresh_token = True
+        instance.is_web = True
+
+        instance.issued_at = get_current_time()
+        instance.expires_at = get_current_time() + self.DEFAULT_TOKEN_EXPIRATION_TIME_DELTA
+
+        generated_key = self._keyring_manager.generate_key()
+        serialized_token = token_cls.serialize(instance, None, lambda x: generated_key)
+        self._keyring_manager.save_key(generated_key, instance.expires_at)
+        return self._attach_token_version(self.LATEST_TOKEN_VERSION, serialized_token)
 
     def get_refresh_token(self, client, user):
         pass
