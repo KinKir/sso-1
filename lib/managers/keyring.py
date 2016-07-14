@@ -26,7 +26,7 @@ class KeyRingManager(Manager):
         self._master_key = master_key
 
     def get_key(self, keyid):
-        instance = self._session.query(Key).filter(Key.id == keyid).one_or_none()
+        instance = self.session.query(Key).filter(Key.id == keyid).one_or_none()
         if instance is None:
             return None
         _, key = self._decrypt_key(instance.salt+instance.key, self._master_key, instance.iv)
@@ -45,7 +45,10 @@ class KeyRingManager(Manager):
         return instance
 
     def delete_key(self, keyid):
-        pass
+        instance = self.session.query(Key).filter(Key.id == keyid).one_or_none()
+        if instance is None:
+            return
+        self.session.delete(instance)
 
     def _encrypt_key(self, key, master_key):
         # Generate a random 96-bit IV.
