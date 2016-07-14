@@ -4,12 +4,15 @@ from lib.managers.oauth2.user_session import UserSessionManager
 
 from lib.oauth_2_token.v1.token import Token as Token_v1
 
-from utils import generate_random_uuid
+from utils import generate_random_uuid, get_current_time
 
 
 class TokenManager(Manager):
 
     VERSION_SEPARATOR = '_'
+
+    # 3 days
+    DEFAULT_TOKEN_EXPIRATION_TIME_DELTA = 3*24*60*60
 
     version_map = {
         'v1': Token_v1
@@ -27,7 +30,8 @@ class TokenManager(Manager):
         self._user_session_manager = UserSessionManager(session)
 
     def create_user_token(self, client, user, refresh_token_session_id, auth_session_id, tenant_id, user_session_id, create_session=True):
-        instance = self.version_map[self.latest_version]()
+        token_cls = self.version_map[self.latest_version]
+        instance = token_cls()
 
         if instance.auth_session_id is not None:
             instance.auth_session_id = auth_session_id
@@ -47,6 +51,10 @@ class TokenManager(Manager):
 
         instance.is_impersonated = False
         instance.is_refresh_token = False
+        instance.is_web = True
+
+        instance.issued_at = get_current_time()
+        instance.expires_at = get_current_time() + self.DEFAULT_TOKEN_EXPIRATION_TIME_DELTA
 
     def create_refresh_token(self, client, user, create_session=True):
         pass
