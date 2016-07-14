@@ -14,15 +14,15 @@ class TokenManager(Manager):
     # 3 days
     DEFAULT_TOKEN_EXPIRATION_TIME_DELTA = 3*24*60*60
 
-    version_map = {
+    TOKEN_VERSION_MAP = {
         'v1': Token_v1
     }
 
-    allowed_token_versions_for_encryption = ['v1']
+    ALLOWED_TOKEN_VERSIONS_FOR_ENCRYPTION = ['v1']
 
-    allowed_token_versions_for_decryption = ['v1']
+    ALLOWED_TOKEN_VERSIONS_FOR_DECRYPTION = ['v1']
 
-    latest_version = 'v1'
+    LATEST_TOKEN_VERSION = 'v1'
 
     def __init__(self, session):
         super(TokenManager, self).__init__(session)
@@ -31,7 +31,7 @@ class TokenManager(Manager):
 
     def create_user_token(self, client, user, refresh_token_session_id, auth_session_id, tenant_id, user_session_id,
                           create_session=True):
-        token_cls = self.version_map[self.latest_version]
+        token_cls = self.TOKEN_VERSION_MAP[self.LATEST_TOKEN_VERSION]
         instance = token_cls()
 
         if instance.auth_session_id is not None:
