@@ -42,7 +42,7 @@ class TokenManager(BaseManager):
         instance.token_id = generate_random_uuid()
         instance.user_id = user.id
         instance.client_id = client.id
-        instance.client_secret_hash = client.secret_hash
+        instance.client_secret_hash = bytes.fromhex(client.secret_hash)
         instance.refresh_token_session_id = refresh_token_session_id
         instance.tenant_id = tenant_id
         if create_session:
@@ -67,7 +67,7 @@ class TokenManager(BaseManager):
         instance.token_id = generate_random_uuid()
         instance.user_id = user.id
         instance.client_id = client.id
-        instance.client_secret_hash = client.secret_hash
+        instance.client_secret_hash = bytes.fromhex(client.secret_hash)
         instance.tenant_id = tenant_id
         if create_session:
             refresh_token_session = self._refresh_token_session_manager. \
@@ -115,4 +115,3 @@ class TokenManager(BaseManager):
 
     def _attach_token_version(self, version, token):
         return version + self.VERSION_SEPARATOR + token
-

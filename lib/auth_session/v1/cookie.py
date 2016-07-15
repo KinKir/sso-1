@@ -35,7 +35,7 @@ class Cookie(object):
     auth_session_type_length = 1
     auth_session_stage_length = 1
     client_id_length = 16
-    client_secret_hash_length = 32
+    client_secret_hash_length = 64
     issued_at_length = 8
     expires_at_length = 8
     logout_token_length = 32
@@ -175,7 +175,7 @@ class Cookie(object):
         self._auth_session_type = AUTH_SESSION_TYPE_INVALID
         self._auth_session_stage = AUTH_SESSION_STAGE_NOT_INITIALIZED
         self._client_id = uuid.UUID(hex='0'*32)
-        self._client_secret_hash = bytes(32)
+        self._client_secret_hash = bytes(64)
         self._impersonation_info = 0
         self._issued_at = 0
         self._expires_at = 0

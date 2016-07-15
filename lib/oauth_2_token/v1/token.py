@@ -28,7 +28,7 @@ class Token(TokenInterface):
     user_id_length = 16
     client_id_length = 16
     user_session_id_length = 16
-    client_secret_hash_length = 32
+    client_secret_hash_length = 64
     issued_at_length = 8
     expires_at_length = 8
     impersonation_info_length = 1
@@ -166,7 +166,7 @@ class Token(TokenInterface):
         self._user_id = uuid.UUID(hex='0'*32)
         self._client_id = uuid.UUID(hex='0'*32)
         self._user_session_id = uuid.UUID(hex='0'*32)
-        self._client_secret_hash = bytes(32)
+        self._client_secret_hash = bytes(64)
         self._issued_at = 0
         self._expires_at = 0
         self._impersonation_info = 0

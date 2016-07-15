@@ -15,12 +15,6 @@ from utils import get_current_time
 
 class KeyRingManager(BaseManager):
 
-    SALT_LENGTH = 32
-
-    KEY_LENGTH = 32
-
-    IV_LENGTH = 12
-
     def __init__(self, session, master_key):
         super(KeyRingManager, self).__init__(session)
         self._master_key = master_key
@@ -29,22 +23,28 @@ class KeyRingManager(BaseManager):
         instance = self.session.query(Key).filter(Key.id == keyid).one_or_none()
         if instance is None:
             return None
-        _, key = self._decrypt_key(instance.salt+instance.key, self._master_key, instance.iv)
+        _, key = self._decrypt_key(bytes.fromhex(instance.salt)+bytes.fromhex(instance.encrypted_key), self._master_key,
+                                   bytes.fromhex(instance.iv))
         return key
 
     def generate_and_save_key(self, expiration_delta):
         key = self.generate_key()
         return key, self.save_key(key, expiration_delta)
 
-    def generate_key(self):
-        return os.urandom(self.KEY_LENGTH)
+    @staticmethod
+    def generate_key():
+        return os.urandom(Key.KEY_LENGTH)
 
     def save_key(self, key, expiration_delta):
         instance = Key()
         instance.created_at = get_current_time()
         instance.expires_at = instance.created_at + expiration_delta
 
-        instance.iv, instance.salt, instance.key = self._encrypt_key(key, self._master_key)
+        iv, salt, encrypted_key = self._encrypt_key(key, self._master_key)
+        instance.iv = iv.hex()
+        instance.salt = salt.hex()
+        instance.encrypted_key = iv.hex()
+
         self.session.add(instance)
         return instance
 
@@ -54,9 +54,10 @@ class KeyRingManager(BaseManager):
             return
         self.session.delete(instance)
 
-    def _encrypt_key(self, key, master_key):
+    @staticmethod
+    def _encrypt_key(key, master_key):
         # Generate a random 96-bit IV.
-        iv = os.urandom(self.IV_LENGTH)
+        iv = os.urandom(Key.IV_LENGTH)
 
         encryptor = Cipher(
             algorithms.AES(master_key),
@@ -64,12 +65,13 @@ class KeyRingManager(BaseManager):
             backend=default_backend()
         ).encryptor()
 
-        salt = os.urandom(self.SALT_LENGTH)
+        salt = os.urandom(Key.SALT_LENGTH)
         encryptor.update(salt)
 
         return iv, salt, encryptor.update(key) + encryptor.finalize()
 
-    def _decrypt_key(self, encrypted_key, master_key, iv):
+    @staticmethod
+    def _decrypt_key(encrypted_key, master_key, iv):
         decryptor = Cipher(
             algorithms.AES(master_key),
             modes.CBC(iv),
@@ -77,4 +79,4 @@ class KeyRingManager(BaseManager):
         ).decryptor()
 
         decrypted = decryptor.update(encrypted_key) + decryptor.finalize()
-        return decrypted[0:self.SALT_LENGTH], decrypted[self.SALT_LENGTH:self.SALT_LENGTH+self.KEY_LENGTH]
+        return decrypted[0:Key.SALT_LENGTH], decrypted[Key.SALT_LENGTH:Key.SALT_LENGTH+Key.KEY_LENGTH]

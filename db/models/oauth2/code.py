@@ -13,7 +13,7 @@ class OAuth2Code(Base):
     __tablename__ = 'oauth_2_codes'
 
     id = Column(guid.GUID(), primary_key=True)
-    code_hash = Column(String(512), index=True, unique=True, nullable=False)
+    code_hash = Column(String(128), index=True, unique=True, nullable=False)
     expires_at = Column(BigInteger, nullable=False)
     created_at = Column(BigInteger, nullable=False)
 

@@ -8,7 +8,7 @@ from db.utils import guid
 class OAuth2Client(Base):
     __tablename__ = 'oauth_2_clients'
     id = Column(guid.GUID(), primary_key=True)
-    secret_hash = Column(String(512), nullable=False)
+    secret_hash = Column(String(128), nullable=False)
     redirect_uris = Column(String, nullable=False)
     provider_restrictions_class = Column(String, nullable=True)
 
