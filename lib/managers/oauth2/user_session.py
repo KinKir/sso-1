@@ -46,7 +46,7 @@ class UserSessionManager(BaseManager):
         if auth_session_id is not _sentinel:
             and_arguments.append(OAuth2UserSession.auth_session_id == auth_session_id)
 
-        return query.filter(and_(and_arguments))
+        return query.filter(and_(*and_arguments)).all()
 
     def get_user_session(self, user_session_id):
         return self.session.query(OAuth2UserSession). \

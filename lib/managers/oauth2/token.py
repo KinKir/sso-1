@@ -59,9 +59,8 @@ class TokenManager(BaseManager):
         instance.issued_at = get_current_time()
         instance.expires_at = get_current_time() + self.DEFAULT_TOKEN_EXPIRATION_TIME_DELTA
 
-        generated_key = self._keyring_manager.generate_key()
-        serialized_token = token_cls.serialize(instance, None, lambda x: generated_key)
-        self._keyring_manager.save_key(generated_key, instance.expires_at)
+        key, container = self._keyring_manager.generate_and_save_key(instance.expires_at_length)
+        serialized_token = token_cls.serialize(instance, container.id, lambda x: key)
         return self._attach_token_version(self.LATEST_TOKEN_VERSION, serialized_token)
 
     def create_refresh_token(self, client, user, tenant_id, refresh_token_session_id, create_session=True):
@@ -87,9 +86,8 @@ class TokenManager(BaseManager):
         instance.issued_at = get_current_time()
         instance.expires_at = get_current_time() + self.DEFAULT_TOKEN_EXPIRATION_TIME_DELTA
 
-        generated_key = self._keyring_manager.generate_key()
-        serialized_token = token_cls.serialize(instance, None, lambda x: generated_key)
-        self._keyring_manager.save_key(generated_key, instance.expires_at)
+        key, container = self._keyring_manager.generate_and_save_key(instance.expires_at_length)
+        serialized_token = token_cls.serialize(instance, container.id, lambda x: key)
         return self._attach_token_version(self.LATEST_TOKEN_VERSION, serialized_token)
 
     def revoke_token(self, token):

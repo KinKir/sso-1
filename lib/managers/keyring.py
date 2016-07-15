@@ -32,6 +32,10 @@ class KeyRingManager(BaseManager):
         _, key = self._decrypt_key(instance.salt+instance.key, self._master_key, instance.iv)
         return key
 
+    def generate_and_save_key(self, expiration_delta):
+        key = self.generate_key()
+        return key, self.save_key(key, expiration_delta)
+
     def generate_key(self):
         return os.urandom(self.KEY_LENGTH)
 
