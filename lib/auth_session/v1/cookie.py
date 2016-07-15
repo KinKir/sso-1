@@ -144,13 +144,19 @@ class Cookie(object):
         return obj
 
     @classmethod
+    def get_key_id(cls, s):
+        binary_data = decode(s)
+        _, _, keyid_bytes, _, _, _ = unpack(binary_data)
+        return uuid.UUID(bytes=keyid_bytes)
+
+    @classmethod
     def deserialize(cls, s, key_retrieval_func):
         binary_data = decode(s)
         iv, tag, keyid_bytes, aad, ciphertext, _ = unpack(binary_data)
         keyid = uuid.UUID(bytes=keyid_bytes)
         key = key_retrieval_func(keyid)
         plaintext = decrypt(key, aad, iv, ciphertext, tag)
-        return cls._parse(plaintext)
+        return keyid, cls._parse(plaintext)
 
     @classmethod
     def serialize(cls, cookie, keyid, key_retrieval_func):
