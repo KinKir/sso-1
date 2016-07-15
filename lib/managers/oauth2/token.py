@@ -100,7 +100,7 @@ class TokenManager(BaseManager):
                                                         create_session)
         return self.encrypt_token(token_cls, instance)
 
-    def revoke_token(self, token):
+    def revoke_token_session(self, token):
         if token.is_refresh_token:
             self._refresh_token_session_manager.delete_refresh_token_session(token.refresh_token_session_id)
         else:
