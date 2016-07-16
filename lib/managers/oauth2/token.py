@@ -109,9 +109,9 @@ class TokenManager(BaseManager):
     def is_token_valid(self, token):
         pass
 
-    def _detach_token_version(self, encoded_token):
-        splinters = encoded_token.split(sep=self.VERSION_SEPARATOR)
+    def _detach_token_version(self, serialized_token_with_version):
+        splinters = serialized_token_with_version.split(sep=self.VERSION_SEPARATOR)
         return splinters[0], splinters[1]
 
-    def _attach_token_version(self, version, encrypted_token):
-        return version + self.VERSION_SEPARATOR + encrypted_token
+    def _attach_token_version(self, version, serialized_token):
+        return version + self.VERSION_SEPARATOR + serialized_token
