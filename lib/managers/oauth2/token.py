@@ -84,7 +84,7 @@ class TokenManager(BaseManager):
         instance.expires_at = get_current_time() + self.DEFAULT_TOKEN_EXPIRATION_TIME_DELTA
         return token_cls, instance
 
-    def encrypt_token(self, token_cls, instance):
+    def encode_token(self, token_cls, instance):
         key, container = self._keyring_manager.generate_and_save_key(instance.expires_at_length)
         serialized_token = token_cls.serialize(instance, container.id, lambda x: key)
         return self._attach_token_version(self.LATEST_TOKEN_VERSION, serialized_token)
@@ -93,12 +93,12 @@ class TokenManager(BaseManager):
                                       user_session_id, create_session=True):
         token_cls, instance = self.create_user_token(client, user, refresh_token_session_id, auth_session_id, tenant_id,
                                                      user_session_id, create_session)
-        return self.encrypt_token(token_cls, instance)
+        return self.encode_token(token_cls, instance)
 
     def create_refresh_token_and_encrypt(self, client, user, tenant_id, refresh_token_session_id, create_session=True):
         token_cls, instance = self.create_refresh_token(client, user, tenant_id, refresh_token_session_id,
                                                         create_session)
-        return self.encrypt_token(token_cls, instance)
+        return self.encode_token(token_cls, instance)
 
     def revoke_token_session(self, token):
         if token.is_refresh_token:
@@ -109,9 +109,9 @@ class TokenManager(BaseManager):
     def is_token_valid(self, token):
         pass
 
-    def _detach_token_version(self, token):
-        splinters = token.split(sep=self.VERSION_SEPARATOR)
+    def _detach_token_version(self, encoded_token):
+        splinters = encoded_token.split(sep=self.VERSION_SEPARATOR)
         return splinters[0], splinters[1]
 
-    def _attach_token_version(self, version, token):
-        return version + self.VERSION_SEPARATOR + token
+    def _attach_token_version(self, version, encrypted_token):
+        return version + self.VERSION_SEPARATOR + encrypted_token
