@@ -33,6 +33,7 @@ class Cookie(CookieInterface):
     auth_session_id_length = 16
     auth_session_type_length = 1
     auth_session_stage_length = 1
+    auth_session_meta_data_pointer_length = 16
     issued_at_length = 8
     expires_at_length = 8
     logout_token_length = 32
@@ -45,6 +46,7 @@ class Cookie(CookieInterface):
         bin_cookie = bytearray(cls.tenant_id_length + cls.user_id_length+cls.provider_id_length +
                                cls.user_data_pointer_length + cls.auth_session_id_length +
                                cls.auth_session_type_length + cls.auth_session_stage_length +
+                               cls.auth_session_meta_data_pointer_length +
                                cls.issued_at_length + cls.expires_at_length +
                                cls.logout_token_length + cls.impersonation_info_length)
 
@@ -70,6 +72,10 @@ class Cookie(CookieInterface):
         bin_cookie[bytes_wrote:bytes_wrote + cls.auth_session_stage_length] = \
             cookie.auth_session_stage.to_bytes(1, byteorder='big')
         bytes_wrote += cls.auth_session_stage_length
+
+        bin_cookie[bytes_wrote:bytes_wrote + cls.auth_session_meta_data_pointer_length] = \
+            cookie.auth_session_meta_data_pointer.bytes
+        bytes_wrote += cls.auth_session_meta_data_pointer_length
 
         bin_cookie[bytes_wrote:bytes_wrote+cls.issued_at_length] = \
             cookie.issued_at.to_bytes(cls.issued_at_length, 'big')
@@ -113,6 +119,10 @@ class Cookie(CookieInterface):
 
         obj.auth_session_stage = int.from_bytes(plaintext[bytes_read:bytes_read + cls.auth_session_stage_length], 'big')
         bytes_read += cls.auth_session_stage_length
+
+        obj.auth_session_meta_data_pointer = \
+            uuid.UUID(bytes=plaintext[bytes_read:bytes_read + cls.auth_session_meta_data_pointer_length])
+        bytes_read += cls.auth_session_meta_data_pointer_length
 
         obj.issued_at = int.from_bytes(plaintext[bytes_read:bytes_read+cls.issued_at_length], 'big')
         bytes_read += cls.issued_at_length
@@ -162,6 +172,7 @@ class Cookie(CookieInterface):
         self._auth_session_id = uuid.UUID(hex='0' * 32)
         self._auth_session_type = self.AUTH_SESSION_TYPE_INVALID
         self._auth_session_stage = self.AUTH_SESSION_STAGE_NOT_INITIALIZED
+        self._auth_session_meta_data_pointer = uuid.UUID(hex='0'*32)
         self._impersonation_info = 0
         self._issued_at = 0
         self._expires_at = 0
@@ -231,6 +242,14 @@ class Cookie(CookieInterface):
         if stg - self._auth_session_stage > 1:
             raise NotImplementedError
         self._auth_session_stage = stg
+
+    @property
+    def auth_session_meta_data_pointer(self):
+        return self._auth_session_meta_data_pointer
+
+    @auth_session_meta_data_pointer.setter
+    def auth_session_meta_data_pointer(self, stg):
+        self._auth_session_meta_data_pointer = stg
 
     # logout token getter and setter
     @property

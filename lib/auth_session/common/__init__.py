@@ -92,6 +92,16 @@ class CookieInterface(metaclass=ABCMeta):
     def auth_session_stage(self, stg):
         pass
 
+    @property
+    @abstractmethod
+    def auth_session_meta_data_pointer(self):
+        pass
+
+    @auth_session_meta_data_pointer.setter
+    @abstractmethod
+    def auth_session_meta_data_pointer(self, stg):
+        pass
+
     # logout token getter and setter
     @property
     @abstractmethod
