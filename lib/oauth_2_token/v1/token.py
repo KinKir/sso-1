@@ -146,6 +146,9 @@ class Token(TokenInterface):
 
     @classmethod
     def serialize(cls, token, keyid, key_retrieval_func):
+        if not isinstance(token, cls):
+            # TODO: Raise an error
+            pass
         key = key_retrieval_func(keyid)
         plaintext = cls._tobin(token)
         iv, ciphertext, tag = encrypt(key, plaintext, None)

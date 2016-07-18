@@ -160,6 +160,9 @@ class Cookie(object):
 
     @classmethod
     def serialize(cls, cookie, keyid, key_retrieval_func):
+        if not isinstance(cookie, cls):
+            # TODO: Raise an error
+            pass
         key = key_retrieval_func(keyid)
         plaintext = cls._tobin(cookie)
         iv, ciphertext, tag = encrypt(key, plaintext, None)

@@ -58,7 +58,7 @@ class TokenManager(BaseManager):
 
         instance.issued_at = get_current_time()
         instance.expires_at = get_current_time() + self.DEFAULT_TOKEN_EXPIRATION_TIME_DELTA
-        return token_cls, instance
+        return self.LATEST_TOKEN_VERSION, instance
 
     def create_refresh_token(self, client, user, tenant_id, refresh_token_session_id, create_session=True):
         token_cls = self.TOKEN_VERSION_MAP[self.LATEST_TOKEN_VERSION]
@@ -82,29 +82,43 @@ class TokenManager(BaseManager):
 
         instance.issued_at = get_current_time()
         instance.expires_at = get_current_time() + self.DEFAULT_TOKEN_EXPIRATION_TIME_DELTA
-        return token_cls, instance
-
-    def encode_token(self, token_cls, instance):
-        key, container = self._keyring_manager.generate_and_save_key(instance.expires_at_length)
-        serialized_token = token_cls.serialize(instance, container.id, lambda x: key)
-        return self._attach_token_version(self.LATEST_TOKEN_VERSION, serialized_token)
-
-    def create_user_token_and_encrypt(self, client, user, refresh_token_session_id, auth_session_id, tenant_id,
-                                      user_session_id, create_session=True):
-        token_cls, instance = self.create_user_token(client, user, refresh_token_session_id, auth_session_id, tenant_id,
-                                                     user_session_id, create_session)
-        return self.encode_token(token_cls, instance)
-
-    def create_refresh_token_and_encrypt(self, client, user, tenant_id, refresh_token_session_id, create_session=True):
-        token_cls, instance = self.create_refresh_token(client, user, tenant_id, refresh_token_session_id,
-                                                        create_session)
-        return self.encode_token(token_cls, instance)
+        return self.LATEST_TOKEN_VERSION, instance
 
     def revoke_token_session(self, token):
         if token.is_refresh_token:
             self._refresh_token_session_manager.delete_refresh_token_session(token.refresh_token_session_id)
         else:
             self._user_session_manager.delete_user_session(token.user_session_id)
+
+    def create_user_token_and_serialize(self, client, user, refresh_token_session_id, auth_session_id, tenant_id,
+                                        user_session_id, create_session=True):
+        token_version, instance = self.create_user_token(client, user, refresh_token_session_id, auth_session_id,
+                                                         tenant_id, user_session_id, create_session)
+        return self.serialize_token(token_version, instance)
+
+    def create_refresh_token_and_serialize(self, client, user, tenant_id, refresh_token_session_id,
+                                           create_session=True):
+        token_version, instance = self.create_refresh_token(client, user, tenant_id, refresh_token_session_id,
+                                                            create_session)
+        return self.serialize_token(token_version, instance)
+
+    def serialize_token(self, token_version, instance):
+        key, key_container = self._keyring_manager.generate_and_save_key(instance.expires_at_length)
+        token_cls = self.TOKEN_VERSION_MAP.get(token_version)
+        if token_cls is None:
+            # TODO: raise an error
+            pass
+        serialized_token = token_cls.serialize(instance, key_container.id, lambda x: key)
+        return self._attach_token_version(self.LATEST_TOKEN_VERSION, serialized_token)
+
+    def deserialize_token(self, serialized_token_with_version):
+        version, serialized_token = self._detach_token_version(serialized_token_with_version)
+        token_cls = self.TOKEN_VERSION_MAP.get(version)
+        if token_cls is None:
+            # TODO: raise an error
+            pass
+        keyid, token = token_cls.deserialize(serialized_token, self._keyring_manager.get_key)
+        return version, keyid, token
 
     def is_token_valid(self, token):
         pass
