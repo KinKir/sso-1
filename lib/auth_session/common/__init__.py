@@ -92,28 +92,6 @@ class CookieInterface(metaclass=ABCMeta):
     def auth_session_stage(self, stg):
         pass
 
-    # Client id getter and setter
-    @property
-    @abstractmethod
-    def client_id(self):
-        pass
-
-    @client_id.setter
-    @abstractmethod
-    def client_id(self, cid):
-        pass
-
-    # Client secret hash getter and setter
-    @property
-    @abstractmethod
-    def client_secret_hash(self):
-        pass
-
-    @client_secret_hash.setter
-    @abstractmethod
-    def client_secret_hash(self, h):
-        pass
-
     # logout token getter and setter
     @property
     @abstractmethod

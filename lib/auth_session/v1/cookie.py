@@ -33,8 +33,6 @@ class Cookie(CookieInterface):
     auth_session_id_length = 16
     auth_session_type_length = 1
     auth_session_stage_length = 1
-    client_id_length = 16
-    client_secret_hash_length = 64
     issued_at_length = 8
     expires_at_length = 8
     logout_token_length = 32
@@ -46,8 +44,8 @@ class Cookie(CookieInterface):
 
         bin_cookie = bytearray(cls.tenant_id_length + cls.user_id_length+cls.provider_id_length +
                                cls.user_data_pointer_length + cls.auth_session_id_length +
-                               cls.auth_session_type_length + cls.auth_session_stage_length + cls.client_id_length +
-                               cls.client_secret_hash_length + cls.issued_at_length + cls.expires_at_length +
+                               cls.auth_session_type_length + cls.auth_session_stage_length +
+                               cls.issued_at_length + cls.expires_at_length +
                                cls.logout_token_length + cls.impersonation_info_length)
 
         bin_cookie[bytes_wrote:bytes_wrote + cls.tenant_id_length] = cookie.tenant_id.bytes
@@ -72,12 +70,6 @@ class Cookie(CookieInterface):
         bin_cookie[bytes_wrote:bytes_wrote + cls.auth_session_stage_length] = \
             cookie.auth_session_stage.to_bytes(1, byteorder='big')
         bytes_wrote += cls.auth_session_stage_length
-
-        bin_cookie[bytes_wrote:bytes_wrote + cls.client_id_length] = cookie.client_id.bytes
-        bytes_wrote += cls.client_id_length
-
-        bin_cookie[bytes_wrote:bytes_wrote + cls.client_secret_hash_length] = cookie.client_secret_hash
-        bytes_wrote += cls.client_secret_hash_length
 
         bin_cookie[bytes_wrote:bytes_wrote+cls.issued_at_length] = \
             cookie.issued_at.to_bytes(cls.issued_at_length, 'big')
@@ -121,12 +113,6 @@ class Cookie(CookieInterface):
 
         obj.auth_session_stage = int.from_bytes(plaintext[bytes_read:bytes_read + cls.auth_session_stage_length], 'big')
         bytes_read += cls.auth_session_stage_length
-
-        obj.client_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read + cls.client_id_length])
-        bytes_read += cls.client_id_length
-
-        obj.client_secret_hash = plaintext[bytes_read:bytes_read + cls.client_secret_hash_length]
-        bytes_read += cls.client_secret_hash_length
 
         obj.issued_at = int.from_bytes(plaintext[bytes_read:bytes_read+cls.issued_at_length], 'big')
         bytes_read += cls.issued_at_length
@@ -176,8 +162,6 @@ class Cookie(CookieInterface):
         self._auth_session_id = uuid.UUID(hex='0' * 32)
         self._auth_session_type = self.AUTH_SESSION_TYPE_INVALID
         self._auth_session_stage = self.AUTH_SESSION_STAGE_NOT_INITIALIZED
-        self._client_id = uuid.UUID(hex='0'*32)
-        self._client_secret_hash = bytes(64)
         self._impersonation_info = 0
         self._issued_at = 0
         self._expires_at = 0
@@ -247,24 +231,6 @@ class Cookie(CookieInterface):
         if stg - self._auth_session_stage > 1:
             raise NotImplementedError
         self._auth_session_stage = stg
-
-    # Client id getter and setter
-    @property
-    def client_id(self):
-        return self._client_id
-
-    @client_id.setter
-    def client_id(self, cid):
-        self._client_id = cid
-
-    # Client secret hash getter and setter
-    @property
-    def client_secret_hash(self):
-        return self._client_secret_hash
-
-    @client_secret_hash.setter
-    def client_secret_hash(self, h):
-        self._client_secret_hash = h
 
     # logout token getter and setter
     @property
@@ -349,7 +315,16 @@ class Cookie(CookieInterface):
     def to_dict(self):
         return {
             'tenant_id': self.tenant_id,
-            'user_id': self.user_id
+            'user_id': self.user_id,
+            'provider_id': self.provider_id,
+            'user_data_pointer': self.user_data_pointer,
+            'auth_session_id': self.auth_session_id,
+            'auth_session_type': self.auth_session_type,
+            'auth_session_stage': self.auth_session_stage,
+            'logout_token': self.logout_token,
+            'impersonation_info': self.impersonation_info,
+            'issued_at': self.issued_at,
+            'expires_at': self.expires_at
         }
 
 
