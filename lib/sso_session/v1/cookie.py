@@ -211,7 +211,7 @@ class Cookie(CookieInterface):
     def user_data_pointer(self, pointer):
         self._user_data_pointer = pointer
 
-    # session id getter and setter
+    # sso session id getter and setter
     @property
     def sso_session_id(self):
         return self._sso_session_id
@@ -220,7 +220,7 @@ class Cookie(CookieInterface):
     def sso_session_id(self, sid):
         self._sso_session_id = sid
 
-    # Token type getter and setter
+    # sso session type getter and setter
     @property
     def sso_session_type(self):
         return self._sso_session_type
