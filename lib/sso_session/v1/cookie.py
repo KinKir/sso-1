@@ -1,39 +1,39 @@
-from lib.auth_session.v1.packer import pack, unpack
-from lib.auth_session.v1.coder import encode, decode
-from lib.auth_session.v1.cryptor import encrypt, decrypt
+from lib.sso_session.v1.packer import pack, unpack
+from lib.sso_session.v1.coder import encode, decode
+from lib.sso_session.v1.cryptor import encrypt, decrypt
 
-from lib.auth_session.common import CookieInterface
+from lib.sso_session.common import CookieInterface
 
 import uuid
 
 
 class Cookie(CookieInterface):
-    AUTH_SESSION_IMPERSONATION_IS_IMPERSONATED = 2
+    SSO_SESSION_IMPERSONATION_IS_IMPERSONATED = 2
 
-    AUTH_SESSION_TYPE_INVALID = 0
+    SSO_SESSION_TYPE_INVALID = 0
 
-    AUTH_SESSION_TYPE_WEB = 1
+    SSO_SESSION_TYPE_WEB = 1
 
     # Stages of session
-    AUTH_SESSION_STAGE_NOT_INITIALIZED = 0
+    SSO_SESSION_STAGE_NOT_INITIALIZED = 0
 
-    AUTH_SESSION_STAGE_LOGIN_STARTED = 1
+    SSO_SESSION_STAGE_LOGIN_STARTED = 1
 
-    AUTH_SESSION_STAGE_PROVIDER_CHOOSE = 2
+    SSO_SESSION_STAGE_PROVIDER_CHOOSE = 2
 
-    AUTH_SESSION_STAGE_PROVIDER_EXECUTION = 3
+    SSO_SESSION_STAGE_PROVIDER_EXECUTION = 3
 
-    AUTH_SESSION_STAGE_LOGGED_IN = 4
+    SSO_SESSION_STAGE_LOGGED_IN = 4
 
     # Field order and their respective size
     tenant_id_length = 16
     user_id_length = 16
     provider_id_length = 16
     user_data_pointer_length = 16
-    auth_session_id_length = 16
-    auth_session_type_length = 1
-    auth_session_stage_length = 1
-    auth_session_meta_data_pointer_length = 16
+    sso_session_id_length = 16
+    sso_session_type_length = 1
+    sso_session_stage_length = 1
+    sso_session_meta_data_pointer_length = 16
     issued_at_length = 8
     expires_at_length = 8
     logout_token_length = 32
@@ -44,9 +44,9 @@ class Cookie(CookieInterface):
         bytes_wrote = 0
 
         bin_cookie = bytearray(cls.tenant_id_length + cls.user_id_length+cls.provider_id_length +
-                               cls.user_data_pointer_length + cls.auth_session_id_length +
-                               cls.auth_session_type_length + cls.auth_session_stage_length +
-                               cls.auth_session_meta_data_pointer_length +
+                               cls.user_data_pointer_length + cls.sso_session_id_length +
+                               cls.sso_session_type_length + cls.sso_session_stage_length +
+                               cls.sso_session_meta_data_pointer_length +
                                cls.issued_at_length + cls.expires_at_length +
                                cls.logout_token_length + cls.impersonation_info_length)
 
@@ -62,20 +62,20 @@ class Cookie(CookieInterface):
         bin_cookie[bytes_wrote:bytes_wrote + cls.user_data_pointer_length] = cookie.user_data_pointer.bytes
         bytes_wrote += cls.user_data_pointer_length
 
-        bin_cookie[bytes_wrote:bytes_wrote + cls.auth_session_id_length] = cookie.auth_session_id.bytes
-        bytes_wrote += cls.auth_session_id_length
+        bin_cookie[bytes_wrote:bytes_wrote + cls.sso_session_id_length] = cookie.sso_session_id.bytes
+        bytes_wrote += cls.sso_session_id_length
 
-        bin_cookie[bytes_wrote:bytes_wrote + cls.auth_session_type_length] = \
-            cookie.auth_session_type.to_bytes(1, byteorder='big')
-        bytes_wrote += cls.auth_session_type_length
+        bin_cookie[bytes_wrote:bytes_wrote + cls.sso_session_type_length] = \
+            cookie.sso_session_type.to_bytes(1, byteorder='big')
+        bytes_wrote += cls.sso_session_type_length
 
-        bin_cookie[bytes_wrote:bytes_wrote + cls.auth_session_stage_length] = \
-            cookie.auth_session_stage.to_bytes(1, byteorder='big')
-        bytes_wrote += cls.auth_session_stage_length
+        bin_cookie[bytes_wrote:bytes_wrote + cls.sso_session_stage_length] = \
+            cookie.sso_session_stage.to_bytes(1, byteorder='big')
+        bytes_wrote += cls.sso_session_stage_length
 
-        bin_cookie[bytes_wrote:bytes_wrote + cls.auth_session_meta_data_pointer_length] = \
-            cookie.auth_session_meta_data_pointer.bytes
-        bytes_wrote += cls.auth_session_meta_data_pointer_length
+        bin_cookie[bytes_wrote:bytes_wrote + cls.sso_session_meta_data_pointer_length] = \
+            cookie.sso_session_meta_data_pointer.bytes
+        bytes_wrote += cls.sso_session_meta_data_pointer_length
 
         bin_cookie[bytes_wrote:bytes_wrote+cls.issued_at_length] = \
             cookie.issued_at.to_bytes(cls.issued_at_length, 'big')
@@ -111,18 +111,18 @@ class Cookie(CookieInterface):
         obj.user_data_pointer = uuid.UUID(bytes=plaintext[bytes_read:bytes_read + cls.user_data_pointer_length])
         bytes_read += cls.user_data_pointer_length
 
-        obj.auth_session_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read + cls.auth_session_id_length])
-        bytes_read += cls.auth_session_id_length
+        obj.sso_session_id = uuid.UUID(bytes=plaintext[bytes_read:bytes_read + cls.sso_session_id_length])
+        bytes_read += cls.sso_session_id_length
 
-        obj.auth_session_type = int.from_bytes(plaintext[bytes_read:bytes_read + cls.auth_session_type_length], 'big')
-        bytes_read += cls.auth_session_type_length
+        obj.sso_session_type = int.from_bytes(plaintext[bytes_read:bytes_read + cls.sso_session_type_length], 'big')
+        bytes_read += cls.sso_session_type_length
 
-        obj.auth_session_stage = int.from_bytes(plaintext[bytes_read:bytes_read + cls.auth_session_stage_length], 'big')
-        bytes_read += cls.auth_session_stage_length
+        obj.sso_session_stage = int.from_bytes(plaintext[bytes_read:bytes_read + cls.sso_session_stage_length], 'big')
+        bytes_read += cls.sso_session_stage_length
 
-        obj.auth_session_meta_data_pointer = \
-            uuid.UUID(bytes=plaintext[bytes_read:bytes_read + cls.auth_session_meta_data_pointer_length])
-        bytes_read += cls.auth_session_meta_data_pointer_length
+        obj.sso_session_meta_data_pointer = \
+            uuid.UUID(bytes=plaintext[bytes_read:bytes_read + cls.sso_session_meta_data_pointer_length])
+        bytes_read += cls.sso_session_meta_data_pointer_length
 
         obj.issued_at = int.from_bytes(plaintext[bytes_read:bytes_read+cls.issued_at_length], 'big')
         bytes_read += cls.issued_at_length
@@ -169,10 +169,10 @@ class Cookie(CookieInterface):
         self._user_id = uuid.UUID(hex='0'*32)
         self._provider_id = uuid.UUID(hex='0'*32)
         self._user_data_pointer = uuid.UUID(hex='0'*32)
-        self._auth_session_id = uuid.UUID(hex='0' * 32)
-        self._auth_session_type = self.AUTH_SESSION_TYPE_INVALID
-        self._auth_session_stage = self.AUTH_SESSION_STAGE_NOT_INITIALIZED
-        self._auth_session_meta_data_pointer = uuid.UUID(hex='0'*32)
+        self._sso_session_id = uuid.UUID(hex='0' * 32)
+        self._sso_session_type = self.SSO_SESSION_TYPE_INVALID
+        self._sso_session_stage = self.SSO_SESSION_STAGE_NOT_INITIALIZED
+        self._sso_session_meta_data_pointer = uuid.UUID(hex='0'*32)
         self._impersonation_info = 0
         self._issued_at = 0
         self._expires_at = 0
@@ -213,43 +213,43 @@ class Cookie(CookieInterface):
 
     # session id getter and setter
     @property
-    def auth_session_id(self):
-        return self._auth_session_id
+    def sso_session_id(self):
+        return self._sso_session_id
 
-    @auth_session_id.setter
-    def auth_session_id(self, sid):
-        self._auth_session_id = sid
+    @sso_session_id.setter
+    def sso_session_id(self, sid):
+        self._sso_session_id = sid
 
     # Token type getter and setter
     @property
-    def auth_session_type(self):
-        return self._auth_session_type
+    def sso_session_type(self):
+        return self._sso_session_type
 
-    @auth_session_type.setter
-    def auth_session_type(self, stp):
+    @sso_session_type.setter
+    def sso_session_type(self, stp):
         if stp >= 256:
             raise OverflowError
-        self._auth_session_type = stp
+        self._sso_session_type = stp
 
     @property
-    def auth_session_stage(self):
-        return self._auth_session_stage
+    def sso_session_stage(self):
+        return self._sso_session_stage
 
-    @auth_session_stage.setter
-    def auth_session_stage(self, stg):
+    @sso_session_stage.setter
+    def sso_session_stage(self, stg):
         if stg >= 256:
             raise OverflowError
-        if stg - self._auth_session_stage > 1:
+        if stg - self._sso_session_stage > 1:
             raise NotImplementedError
-        self._auth_session_stage = stg
+        self._sso_session_stage = stg
 
     @property
-    def auth_session_meta_data_pointer(self):
-        return self._auth_session_meta_data_pointer
+    def sso_session_meta_data_pointer(self):
+        return self._sso_session_meta_data_pointer
 
-    @auth_session_meta_data_pointer.setter
-    def auth_session_meta_data_pointer(self, stg):
-        self._auth_session_meta_data_pointer = stg
+    @sso_session_meta_data_pointer.setter
+    def sso_session_meta_data_pointer(self, stg):
+        self._sso_session_meta_data_pointer = stg
 
     # logout token getter and setter
     @property
@@ -291,42 +291,42 @@ class Cookie(CookieInterface):
 
     @property
     def is_impersonated(self):
-        return (self._impersonation_info & self.AUTH_SESSION_IMPERSONATION_IS_IMPERSONATED) == \
-               self.AUTH_SESSION_IMPERSONATION_IS_IMPERSONATED
+        return (self._impersonation_info & self.SSO_SESSION_IMPERSONATION_IS_IMPERSONATED) == \
+               self.SSO_SESSION_IMPERSONATION_IS_IMPERSONATED
 
     @is_impersonated.setter
     def is_impersonated(self, v):
         if v:
-            self._impersonation_info |= self.AUTH_SESSION_IMPERSONATION_IS_IMPERSONATED
+            self._impersonation_info |= self.SSO_SESSION_IMPERSONATION_IS_IMPERSONATED
         else:
-            self._impersonation_info &= (~self.AUTH_SESSION_IMPERSONATION_IS_IMPERSONATED)
+            self._impersonation_info &= (~self.SSO_SESSION_IMPERSONATION_IS_IMPERSONATED)
 
     @property
     def is_web(self):
-        return (self._auth_session_type & self.AUTH_SESSION_TYPE_WEB) == self.AUTH_SESSION_TYPE_WEB
+        return (self._sso_session_type & self.SSO_SESSION_TYPE_WEB) == self.SSO_SESSION_TYPE_WEB
 
     @is_web.setter
     def is_web(self, v):
         if v:
-            self._auth_session_type |= self.AUTH_SESSION_TYPE_WEB
+            self._sso_session_type |= self.SSO_SESSION_TYPE_WEB
         else:
-            self._auth_session_type &= (~self.AUTH_SESSION_TYPE_WEB)
+            self._sso_session_type &= (~self.SSO_SESSION_TYPE_WEB)
 
     def is_initialized(self):
-        return self._auth_session_type != self.AUTH_SESSION_TYPE_INVALID and \
-               self._auth_session_stage != self.AUTH_SESSION_STAGE_NOT_INITIALIZED
+        return self._sso_session_type != self.SSO_SESSION_TYPE_INVALID and \
+               self._sso_session_stage != self.SSO_SESSION_STAGE_NOT_INITIALIZED
 
     def is_choosing_provider(self):
-        return self._auth_session_stage == self.AUTH_SESSION_STAGE_PROVIDER_CHOOSE
+        return self._sso_session_stage == self.SSO_SESSION_STAGE_PROVIDER_CHOOSE
 
     def is_executing_provider(self):
-        return self._auth_session_stage == self.AUTH_SESSION_STAGE_PROVIDER_EXECUTION
+        return self._sso_session_stage == self.SSO_SESSION_STAGE_PROVIDER_EXECUTION
 
     def is_user_logged_in(self):
-        return self._auth_session_stage == self.AUTH_SESSION_STAGE_LOGGED_IN
+        return self._sso_session_stage == self.SSO_SESSION_STAGE_LOGGED_IN
 
     def is_login_started(self):
-        return self._auth_session_stage == self.AUTH_SESSION_STAGE_LOGGED_IN
+        return self._sso_session_stage == self.SSO_SESSION_STAGE_LOGGED_IN
 
     def is_valid(self):
         pass
@@ -337,9 +337,9 @@ class Cookie(CookieInterface):
             'user_id': self.user_id,
             'provider_id': self.provider_id,
             'user_data_pointer': self.user_data_pointer,
-            'auth_session_id': self.auth_session_id,
-            'auth_session_type': self.auth_session_type,
-            'auth_session_stage': self.auth_session_stage,
+            'sso_session_id': self.sso_session_id,
+            'sso_session_type': self.sso_session_type,
+            'sso_session_stage': self.sso_session_stage,
             'logout_token': self.logout_token,
             'impersonation_info': self.impersonation_info,
             'issued_at': self.issued_at,

@@ -36,7 +36,7 @@ class User(Base):
 
     oauth_2_codes = relationship('OAuth2Code', back_populates='user')
 
-    # Auth session
-    auth_sessions = relationship('AuthSession', back_populates='user')
+    # SSO session
+    sso_sessions = relationship('SSOSession', back_populates='user')
 
 

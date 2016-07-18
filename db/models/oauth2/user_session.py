@@ -14,7 +14,7 @@ class OAuth2UserSession(Base):
     created_at = Column(BigInteger, nullable=False)
     logout_token = Column(String(128), nullable=False, index=True, unique=True)
 
-    attached_to_auth_session = Column(Boolean, nullable=False)
+    attached_to_sso_session = Column(Boolean, nullable=False)
 
     client_id = Column(guid.GUID(), ForeignKey('oauth_2_clients.id'), nullable=False)
     client = relationship('OAuth2Client', back_populates='user_sessions')
@@ -25,5 +25,5 @@ class OAuth2UserSession(Base):
     refresh_token_session_id = Column(guid.GUID(), ForeignKey('oauth_2_refresh_token_sessions.id'), nullable=False)
     refresh_token_session = relationship('OAuth2RefreshTokenSession', back_populates='user_sessions')
 
-    auth_session_id = Column(guid.GUID(), ForeignKey('auth_sessions.id'), nullable=True)
-    auth_session = relationship('AuthSession', back_populates='oauth_2_user_sessions')
+    sso_session_id = Column(guid.GUID(), ForeignKey('sso_sessions.id'), nullable=True)
+    sso_session = relationship('SSOSession', back_populates='oauth_2_user_sessions')

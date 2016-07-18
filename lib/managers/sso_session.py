@@ -1,5 +1,5 @@
 from lib.managers.base import BaseManager
 
 
-class AuthSessionManager(BaseManager):
+class SSOSessionManager(BaseManager):
     pass

@@ -63,43 +63,43 @@ class CookieInterface(metaclass=ABCMeta):
     # session id getter and setter
     @property
     @abstractmethod
-    def auth_session_id(self):
+    def sso_session_id(self):
         pass
 
-    @auth_session_id.setter
+    @sso_session_id.setter
     @abstractmethod
-    def auth_session_id(self, sid):
+    def sso_session_id(self, sid):
         pass
 
     # Token type getter and setter
     @property
     @abstractmethod
-    def auth_session_type(self):
+    def sso_session_type(self):
         pass
 
-    @auth_session_type.setter
+    @sso_session_type.setter
     @abstractmethod
-    def auth_session_type(self, stp):
-        pass
-
-    @property
-    @abstractmethod
-    def auth_session_stage(self):
-        pass
-
-    @auth_session_stage.setter
-    @abstractmethod
-    def auth_session_stage(self, stg):
+    def sso_session_type(self, stp):
         pass
 
     @property
     @abstractmethod
-    def auth_session_meta_data_pointer(self):
+    def sso_session_stage(self):
         pass
 
-    @auth_session_meta_data_pointer.setter
+    @sso_session_stage.setter
     @abstractmethod
-    def auth_session_meta_data_pointer(self, stg):
+    def sso_session_stage(self, stg):
+        pass
+
+    @property
+    @abstractmethod
+    def sso_session_meta_data_pointer(self):
+        pass
+
+    @sso_session_meta_data_pointer.setter
+    @abstractmethod
+    def sso_session_meta_data_pointer(self, stg):
         pass
 
     # logout token getter and setter
