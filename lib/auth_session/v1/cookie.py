@@ -2,29 +2,28 @@ from lib.auth_session.v1.packer import pack, unpack
 from lib.auth_session.v1.coder import encode, decode
 from lib.auth_session.v1.cryptor import encrypt, decrypt
 
+from lib.auth_session.common import CookieInterface
+
 import uuid
 
-import hashlib
 
-AUTH_SESSION_IMPERSONATION_IS_IMPERSONATED = 2
+class Cookie(CookieInterface):
+    AUTH_SESSION_IMPERSONATION_IS_IMPERSONATED = 2
 
-AUTH_SESSION_TYPE_INVALID = 0
+    AUTH_SESSION_TYPE_INVALID = 0
 
-AUTH_SESSION_TYPE_WEB = 1
+    AUTH_SESSION_TYPE_WEB = 1
 
-# Stages of session
-AUTH_SESSION_STAGE_NOT_INITIALIZED = 0
+    # Stages of session
+    AUTH_SESSION_STAGE_NOT_INITIALIZED = 0
 
-AUTH_SESSION_STAGE_LOGIN_STARTED = 1
+    AUTH_SESSION_STAGE_LOGIN_STARTED = 1
 
-AUTH_SESSION_STAGE_PROVIDER_CHOOSE = 2
+    AUTH_SESSION_STAGE_PROVIDER_CHOOSE = 2
 
-AUTH_SESSION_STAGE_PROVIDER_EXECUTION = 3
+    AUTH_SESSION_STAGE_PROVIDER_EXECUTION = 3
 
-AUTH_SESSION_STAGE_LOGGED_IN = 4
-
-
-class Cookie(object):
+    AUTH_SESSION_STAGE_LOGGED_IN = 4
 
     # Field order and their respective size
     tenant_id_length = 16
@@ -169,20 +168,14 @@ class Cookie(object):
         packed = pack(iv, ciphertext, tag, None, keyid.bytes)
         return encode(packed)
 
-    @classmethod
-    def generate_client_secret_hash(cls, secret):
-        sha = hashlib.sha256()
-        sha.update(secret.encode(encoding='utf-8', errors='strict'))
-        return sha.digest()
-
     def __init__(self):
         self._tenant_id = uuid.UUID(hex='0' * 32)
         self._user_id = uuid.UUID(hex='0'*32)
         self._provider_id = uuid.UUID(hex='0'*32)
         self._user_data_pointer = uuid.UUID(hex='0'*32)
         self._auth_session_id = uuid.UUID(hex='0' * 32)
-        self._auth_session_type = AUTH_SESSION_TYPE_INVALID
-        self._auth_session_stage = AUTH_SESSION_STAGE_NOT_INITIALIZED
+        self._auth_session_type = self.AUTH_SESSION_TYPE_INVALID
+        self._auth_session_stage = self.AUTH_SESSION_STAGE_NOT_INITIALIZED
         self._client_id = uuid.UUID(hex='0'*32)
         self._client_secret_hash = bytes(64)
         self._impersonation_info = 0
@@ -313,42 +306,51 @@ class Cookie(object):
 
     @property
     def is_impersonated(self):
-        return (self._impersonation_info & AUTH_SESSION_IMPERSONATION_IS_IMPERSONATED) == \
-               AUTH_SESSION_IMPERSONATION_IS_IMPERSONATED
+        return (self._impersonation_info & self.AUTH_SESSION_IMPERSONATION_IS_IMPERSONATED) == \
+               self.AUTH_SESSION_IMPERSONATION_IS_IMPERSONATED
 
     @is_impersonated.setter
     def is_impersonated(self, v):
         if v:
-            self._impersonation_info |= AUTH_SESSION_IMPERSONATION_IS_IMPERSONATED
+            self._impersonation_info |= self.AUTH_SESSION_IMPERSONATION_IS_IMPERSONATED
         else:
-            self._impersonation_info &= (~AUTH_SESSION_IMPERSONATION_IS_IMPERSONATED)
+            self._impersonation_info &= (~self.AUTH_SESSION_IMPERSONATION_IS_IMPERSONATED)
 
     @property
     def is_web(self):
-        return (self._auth_session_type & AUTH_SESSION_TYPE_WEB) == AUTH_SESSION_TYPE_WEB
+        return (self._auth_session_type & self.AUTH_SESSION_TYPE_WEB) == self.AUTH_SESSION_TYPE_WEB
 
     @is_web.setter
     def is_web(self, v):
         if v:
-            self._auth_session_type |= AUTH_SESSION_TYPE_WEB
+            self._auth_session_type |= self.AUTH_SESSION_TYPE_WEB
         else:
-            self._auth_session_type &= (~AUTH_SESSION_TYPE_WEB)
+            self._auth_session_type &= (~self.AUTH_SESSION_TYPE_WEB)
 
     def is_initialized(self):
-        return self._auth_session_type != AUTH_SESSION_TYPE_INVALID and \
-               self._auth_session_stage != AUTH_SESSION_STAGE_NOT_INITIALIZED
+        return self._auth_session_type != self.AUTH_SESSION_TYPE_INVALID and \
+               self._auth_session_stage != self.AUTH_SESSION_STAGE_NOT_INITIALIZED
 
     def is_choosing_provider(self):
-        return self._auth_session_stage == AUTH_SESSION_STAGE_PROVIDER_CHOOSE
+        return self._auth_session_stage == self.AUTH_SESSION_STAGE_PROVIDER_CHOOSE
 
     def is_executing_provider(self):
-        return self._auth_session_stage == AUTH_SESSION_STAGE_PROVIDER_EXECUTION
+        return self._auth_session_stage == self.AUTH_SESSION_STAGE_PROVIDER_EXECUTION
 
     def is_user_logged_in(self):
-        return self._auth_session_stage == AUTH_SESSION_STAGE_LOGGED_IN
+        return self._auth_session_stage == self.AUTH_SESSION_STAGE_LOGGED_IN
 
     def is_login_started(self):
-        return self._auth_session_stage == AUTH_SESSION_STAGE_LOGGED_IN
+        return self._auth_session_stage == self.AUTH_SESSION_STAGE_LOGGED_IN
+
+    def is_valid(self):
+        pass
+
+    def to_dict(self):
+        return {
+            'tenant_id': self.tenant_id,
+            'user_id': self.user_id
+        }
 
 
 

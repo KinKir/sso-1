@@ -5,8 +5,6 @@ from lib.oauth_2_token.v1.cryptor import encrypt, decrypt
 
 import uuid
 
-import hashlib
-
 
 class Token(TokenInterface):
 
@@ -154,18 +152,6 @@ class Token(TokenInterface):
         iv, ciphertext, tag = encrypt(key, plaintext, None)
         packed = pack(iv, ciphertext, tag, None, keyid.bytes)
         return encode(packed)
-
-    @classmethod
-    def generate_client_secret_hash(cls, secret):
-        sha = hashlib.sha256()
-        sha.update(secret.encode(encoding='utf-8', errors='strict'))
-        return sha.digest()
-
-    @classmethod
-    def generate_mobile_client_secret_hash(cls, secret):
-        sha = hashlib.sha256()
-        sha.update(secret.encode(encoding='utf-8', errors='strict'))
-        return sha.digest()
 
     def __init__(self):
         self._token_id = uuid.UUID(hex='0'*32)

@@ -3,7 +3,7 @@ from abc import (
 )
 
 
-class TokenInterface(metaclass=ABCMeta):
+class CookieInterface(metaclass=ABCMeta):
     @classmethod
     @abstractmethod
     def deserialize(cls, s, key_retrieval_func):
@@ -11,44 +11,12 @@ class TokenInterface(metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def serialize(cls, token, keyid, key_retrieval_func):
+    def serialize(cls, cookie, keyid, key_retrieval_func):
         pass
 
     @classmethod
     @abstractmethod
     def get_key_id(cls, s):
-        pass
-
-    # oauth_2_token id getter and setter
-    @property
-    @abstractmethod
-    def token_id(self):
-        pass
-
-    @token_id.setter
-    @abstractmethod
-    def token_id(self, tid):
-        pass
-
-    # refresh oauth_2_token id getter and setter (Only there if this oauth_2_token is refresh oauth_2_token)
-    @property
-    @abstractmethod
-    def refresh_token_session_id(self):
-        pass
-
-    @refresh_token_session_id.setter
-    @abstractmethod
-    def refresh_token_session_id(self, tid):
-        pass
-
-    @property
-    @abstractmethod
-    def auth_session_id(self):
-        pass
-
-    @auth_session_id.setter
-    @abstractmethod
-    def auth_session_id(self, aid):
         pass
 
     @property
@@ -69,7 +37,59 @@ class TokenInterface(metaclass=ABCMeta):
 
     @user_id.setter
     @abstractmethod
-    def user_id(self, user_id):
+    def user_id(self, uid):
+        pass
+
+    @property
+    @abstractmethod
+    def provider_id(self):
+        pass
+
+    @provider_id.setter
+    @abstractmethod
+    def provider_id(self, pid):
+        pass
+
+    @property
+    @abstractmethod
+    def user_data_pointer(self):
+        pass
+
+    @user_data_pointer.setter
+    @abstractmethod
+    def user_data_pointer(self, pointer):
+        pass
+
+    # session id getter and setter
+    @property
+    @abstractmethod
+    def auth_session_id(self):
+        pass
+
+    @auth_session_id.setter
+    @abstractmethod
+    def auth_session_id(self, sid):
+        pass
+
+    # Token type getter and setter
+    @property
+    @abstractmethod
+    def auth_session_type(self):
+        pass
+
+    @auth_session_type.setter
+    @abstractmethod
+    def auth_session_type(self, stp):
+        pass
+
+    @property
+    @abstractmethod
+    def auth_session_stage(self):
+        pass
+
+    @auth_session_stage.setter
+    @abstractmethod
+    def auth_session_stage(self, stg):
         pass
 
     # Client id getter and setter
@@ -80,29 +100,7 @@ class TokenInterface(metaclass=ABCMeta):
 
     @client_id.setter
     @abstractmethod
-    def client_id(self, client_id):
-        pass
-
-    # User session id getter and setter
-    @property
-    @abstractmethod
-    def user_session_id(self):
-        pass
-
-    @user_session_id.setter
-    @abstractmethod
-    def user_session_id(self, session_id):
-        pass
-
-    # Token type getter and setter
-    @property
-    @abstractmethod
-    def token_type(self):
-        pass
-
-    @token_type.setter
-    @abstractmethod
-    def token_type(self, type_of_token):
+    def client_id(self, cid):
         pass
 
     # Client secret hash getter and setter
@@ -113,7 +111,18 @@ class TokenInterface(metaclass=ABCMeta):
 
     @client_secret_hash.setter
     @abstractmethod
-    def client_secret_hash(self, secret_hash):
+    def client_secret_hash(self, h):
+        pass
+
+    # logout token getter and setter
+    @property
+    @abstractmethod
+    def logout_token(self):
+        pass
+
+    @logout_token.setter
+    @abstractmethod
+    def logout_token(self, lt):
         pass
 
     # is impersonated getter and setter
@@ -151,16 +160,6 @@ class TokenInterface(metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def is_refresh_token(self):
-        pass
-
-    @is_refresh_token.setter
-    @abstractmethod
-    def is_refresh_token(self, v):
-        pass
-
-    @property
-    @abstractmethod
     def is_impersonated(self):
         pass
 
@@ -179,14 +178,24 @@ class TokenInterface(metaclass=ABCMeta):
     def is_web(self, v):
         pass
 
-    @property
     @abstractmethod
-    def is_tied_to_auth_session(self):
+    def is_initialized(self):
         pass
 
-    @is_tied_to_auth_session.setter
     @abstractmethod
-    def is_tied_to_auth_session(self, v):
+    def is_choosing_provider(self):
+        pass
+
+    @abstractmethod
+    def is_executing_provider(self):
+        pass
+
+    @abstractmethod
+    def is_user_logged_in(self):
+        pass
+
+    @abstractmethod
+    def is_login_started(self):
         pass
 
     @abstractmethod
