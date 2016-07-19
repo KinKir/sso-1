@@ -1,6 +1,6 @@
-from lib.sso_session.v1.packer import pack, unpack
-from lib.sso_session.v1.coder import encode, decode
-from lib.sso_session.v1.cryptor import encrypt, decrypt
+from lib.generic_session.packer import GenericSessionPacker as Packer
+from lib.generic_session.coder import GenericSessionCoder as Coder
+from lib.generic_session.cryptor import GenericSessionCryptor as Cryptor
 
 from lib.sso_session.common import CookieInterface
 
@@ -140,17 +140,17 @@ class Cookie(CookieInterface):
 
     @classmethod
     def get_key_id(cls, s):
-        binary_data = decode(s)
-        _, _, keyid_bytes, _, _, _ = unpack(binary_data)
+        binary_data = Coder.decode(s)
+        _, _, keyid_bytes, _, _, _ = Packer.unpack(binary_data)
         return uuid.UUID(bytes=keyid_bytes)
 
     @classmethod
     def deserialize(cls, s, key_retrieval_func):
-        binary_data = decode(s)
-        iv, tag, keyid_bytes, aad, ciphertext, _ = unpack(binary_data)
+        binary_data = Coder.decode(s)
+        iv, tag, keyid_bytes, aad, ciphertext, _ = Packer.unpack(binary_data)
         keyid = uuid.UUID(bytes=keyid_bytes)
         key = key_retrieval_func(keyid)
-        plaintext = decrypt(key, aad, iv, ciphertext, tag)
+        plaintext = Cryptor.decrypt(key, aad, iv, ciphertext, tag)
         return keyid, cls._parse(plaintext)
 
     @classmethod
@@ -160,9 +160,9 @@ class Cookie(CookieInterface):
             pass
         key = key_retrieval_func(keyid)
         plaintext = cls._tobin(cookie)
-        iv, ciphertext, tag = encrypt(key, plaintext, None)
-        packed = pack(iv, ciphertext, tag, None, keyid.bytes)
-        return encode(packed)
+        iv, ciphertext, tag = Cryptor.encrypt(key, plaintext, None)
+        packed = Packer.pack(iv, ciphertext, tag, None, keyid.bytes)
+        return Coder.encode(packed)
 
     def __init__(self):
         self._tenant_id = uuid.UUID(hex='0' * 32)

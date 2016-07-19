@@ -1,7 +1,7 @@
 from lib.oauth_2_token.common import TokenInterface
-from lib.oauth_2_token.v1.packer import pack, unpack
-from lib.oauth_2_token.v1.coder import encode, decode
-from lib.oauth_2_token.v1.cryptor import encrypt, decrypt
+from lib.generic_token.packer import GenericTokenPacker as Packer
+from lib.generic_token.coder import GenericTokenCoder as Coder
+from lib.generic_token.cryptor import GenericTokenCryptor as Cryptor
 
 import uuid
 
@@ -129,17 +129,17 @@ class Token(TokenInterface):
 
     @classmethod
     def get_key_id(cls, s):
-        binary_data = decode(s)
-        _, _, keyid_bytes, _, _, _ = unpack(binary_data)
+        binary_data = Coder.decode(s)
+        _, _, keyid_bytes, _, _, _ = Packer.unpack(binary_data)
         return uuid.UUID(bytes=keyid_bytes)
 
     @classmethod
     def deserialize(cls, s, key_retrieval_func):
-        binary_data = decode(s)
-        iv, tag, keyid_bytes, aad, ciphertext, _ = unpack(binary_data)
+        binary_data = Coder.decode(s)
+        iv, tag, keyid_bytes, aad, ciphertext, _ = Packer.unpack(binary_data)
         keyid = uuid.UUID(bytes=keyid_bytes)
         key = key_retrieval_func(keyid)
-        plaintext = decrypt(key, aad, iv, ciphertext, tag)
+        plaintext = Cryptor.decrypt(key, aad, iv, ciphertext, tag)
         return keyid, cls._parse(plaintext)
 
     @classmethod
@@ -149,9 +149,9 @@ class Token(TokenInterface):
             pass
         key = key_retrieval_func(keyid)
         plaintext = cls._tobin(token)
-        iv, ciphertext, tag = encrypt(key, plaintext, None)
-        packed = pack(iv, ciphertext, tag, None, keyid.bytes)
-        return encode(packed)
+        iv, ciphertext, tag = Cryptor.encrypt(key, plaintext, None)
+        packed = Packer.pack(iv, ciphertext, tag, None, keyid.bytes)
+        return Coder.encode(packed)
 
     def __init__(self):
         self._token_id = uuid.UUID(hex='0'*32)
