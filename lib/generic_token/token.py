@@ -23,9 +23,6 @@ class GenericToken(MutableMapping):
     def __setitem__(self, key, value):
         if not isinstance(key, str):
             raise NotImplementedError
-        if not (isinstance(value, str) or isinstance(value, int) or
-                isinstance(value, float) or isinstance(value, self)):
-            raise NotImplementedError
         return self._dict.__setitem__(key, value)
 
     def __delitem__(self, key):

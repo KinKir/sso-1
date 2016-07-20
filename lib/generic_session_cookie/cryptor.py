@@ -1,5 +1,5 @@
 from lib.utils.cryptor import Cryptor
 
 
-class GenericSessionCryptor(Cryptor):
+class GenericSessionCookieCryptor(Cryptor):
     pass

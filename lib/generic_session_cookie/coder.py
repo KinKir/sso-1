@@ -1,5 +1,5 @@
 from lib.utils.coder import Coder
 
 
-class GenericSessionCoder(Coder):
+class GenericSessionCookieCoder(Coder):
     pass

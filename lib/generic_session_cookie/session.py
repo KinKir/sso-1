@@ -1,6 +1,6 @@
-from lib.generic_session.coder import GenericSessionCoder as Coder
-from lib.generic_session.packer import GenericSessionPacker as Packer
-from lib.generic_session.cryptor import GenericSessionCryptor as Cryptor
+from lib.generic_session_cookie.coder import GenericSessionCookieCoder as Coder
+from lib.generic_session_cookie.packer import GenericSessionCookiePacker as Packer
+from lib.generic_session_cookie.cryptor import GenericSessionCookieCryptor as Cryptor
 
 from collections import MutableMapping
 
@@ -9,7 +9,7 @@ import uuid
 import ujson
 
 
-class GenericSession(MutableMapping):
+class GenericSessionCookie(MutableMapping):
 
     def __len__(self):
         return self._dict.__len__()
@@ -22,9 +22,6 @@ class GenericSession(MutableMapping):
 
     def __setitem__(self, key, value):
         if not isinstance(key, str):
-            raise NotImplementedError
-        if not (isinstance(value, str) or isinstance(value, int) or
-                isinstance(value, float) or isinstance(value, self)):
             raise NotImplementedError
         return self._dict.__setitem__(key, value)
 

@@ -1,5 +1,5 @@
 from lib.utils.packer import Packer
 
 
-class GenericSessionPacker(Packer):
+class GenericSessionCookiePacker(Packer):
     pass
