@@ -1,7 +1,8 @@
-from lib.managers.base import BaseManager
-from db.models.oauth2.user_session import OAuth2UserSession
-from utils import random_string_generator, get_current_time, generate_random_uuid
 from sqlalchemy import and_
+
+from db.models.oauth2.user_session import OAuth2UserSession
+from managers.base import BaseManager
+from utils import random_string_generator, get_current_time, generate_random_uuid
 
 _sentinel = object()
 

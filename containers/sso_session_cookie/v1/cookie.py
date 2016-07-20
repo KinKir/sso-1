@@ -1,10 +1,10 @@
 import uuid
 
-from lib.containers.generic_session_cookie.cryptor import GenericSessionCookieCryptor as Cryptor
-from lib.containers.generic_session_cookie.packer import GenericSessionCookiePacker as Packer
+from containers.generic_session_cookie.cryptor import GenericSessionCookieCryptor as Cryptor
+from containers.generic_session_cookie.packer import GenericSessionCookiePacker as Packer
 
-from lib.containers.generic_session_cookie.coder import GenericSessionCookieCoder as Coder
-from lib.containers.sso_session_cookie.common import SSOSessionCookieInterface
+from containers.generic_session_cookie.coder import GenericSessionCookieCoder as Coder
+from containers.sso_session_cookie.common import SSOSessionCookieInterface
 
 
 class SSOSessionCookie(SSOSessionCookieInterface):

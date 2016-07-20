@@ -1,11 +1,13 @@
-from db.models.oauth2.code import OAuth2Code
-from utils import random_string_generator
-from lib.managers.base import BaseManager
-from sqlalchemy import and_
-
 import hashlib
 
+from sqlalchemy import and_
+
+from db.models.oauth2.code import OAuth2Code
+from managers.base import BaseManager
 from utils import generate_random_uuid, get_current_time
+from utils import random_string_generator
+
+_sentinel = object()
 
 
 class CodeManager(BaseManager):
@@ -36,7 +38,7 @@ class CodeManager(BaseManager):
         self.session.add(instance)
         return instance, auth_code
 
-    def use_code(self, auth_code, redirect_uri, client_id, destroy=True):
+    def use_code(self, auth_code, redirect_uri, client_id, delete=True):
         current_time = get_current_time()
         expiration_time = current_time + self.DEFAULT_EXPIRATION_TIME_DELTA
         code_hash = self._hash_code(auth_code)
@@ -50,12 +52,20 @@ class CodeManager(BaseManager):
             return None
         user_id = instance.user_id
 
-        if destroy:
-            self.destroy_code(instance.id)
+        if delete:
+            self.delete_code(instance.id)
 
         return user_id
 
-    def destroy_code(self, auth_code_id):
+    def get_codes(self, user_id=_sentinel):
+        query = self.session.query(OAuth2Code)
+
+        if user_id is _sentinel:
+            return query.all()
+        else:
+            return query.filter(OAuth2Code.user_id == user_id)
+
+    def delete_code(self, auth_code_id):
         instance = self.session.query(OAuth2Code).\
             filter(OAuth2Code.id == auth_code_id).one_or_none()
         if instance is not None:

@@ -1,6 +1,5 @@
-from lib.managers.base import BaseManager
 from db.models.sso_session import SSOSession
-
+from managers.base import BaseManager
 from utils import get_current_time, generate_random_uuid
 
 _sentinel = object()

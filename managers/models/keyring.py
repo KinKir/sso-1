@@ -1,15 +1,12 @@
-from lib.managers.base import BaseManager
+import os
 
+from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import (
     Cipher, algorithms, modes
 )
 
-from cryptography.hazmat.backends import default_backend
-
-import os
-
 from db.models.key import Key
-
+from managers.base import BaseManager
 from utils import get_current_time
 
 

@@ -1,10 +1,10 @@
 import uuid
 
-from lib.containers.generic_token.coder import GenericTokenCoder as Coder
-from lib.containers.generic_token.packer import GenericTokenPacker as Packer
+from containers.generic_token.coder import GenericTokenCoder as Coder
+from containers.generic_token.packer import GenericTokenPacker as Packer
 
-from lib.containers.generic_token.cryptor import GenericTokenCryptor as Cryptor
-from lib.containers.oauth_2_token.common import OAuth2TokenInterface
+from containers.generic_token.cryptor import GenericTokenCryptor as Cryptor
+from containers.oauth_2_token.common import OAuth2TokenInterface
 
 
 class OAuth2Token(OAuth2TokenInterface):

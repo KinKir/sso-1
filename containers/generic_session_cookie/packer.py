@@ -1,4 +1,4 @@
-from lib.containers.utils.packer import Packer
+from containers.utils.packer import Packer
 
 
 class GenericSessionCookiePacker(Packer):

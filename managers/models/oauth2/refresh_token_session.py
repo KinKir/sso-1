@@ -1,8 +1,7 @@
-from lib.managers.base import BaseManager
-from db.models.oauth2.refresh_token_session import OAuth2RefreshTokenSession
-
 from sqlalchemy import and_
 
+from db.models.oauth2.refresh_token_session import OAuth2RefreshTokenSession
+from managers.base import BaseManager
 from utils import get_current_time, generate_random_uuid
 
 _sentinel = object()
