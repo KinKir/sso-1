@@ -1,13 +1,13 @@
-from lib.generic_session_cookie.packer import GenericSessionCookiePacker as Packer
-from lib.generic_session_cookie.coder import GenericSessionCookieCoder as Coder
-from lib.generic_session_cookie.cryptor import GenericSessionCookieCryptor as Cryptor
-
-from lib.sso_session_cookie.common import CookieInterface
-
 import uuid
 
+from lib.containers.generic_session_cookie.cryptor import GenericSessionCookieCryptor as Cryptor
+from lib.containers.generic_session_cookie.packer import GenericSessionCookiePacker as Packer
 
-class SSOSessionCookie(CookieInterface):
+from lib.containers.generic_session_cookie.coder import GenericSessionCookieCoder as Coder
+from lib.containers.sso_session_cookie.common import SSOSessionCookieInterface
+
+
+class SSOSessionCookie(SSOSessionCookieInterface):
     SSO_SESSION_IMPERSONATION_IS_IMPERSONATED = 2
 
     SSO_SESSION_TYPE_INVALID = 0

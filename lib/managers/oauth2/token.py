@@ -1,10 +1,8 @@
+from lib.containers.oauth_2_token import Token as Token_v1
 from lib.managers.base import BaseManager
+from lib.managers.keyring import KeyRingManager
 from lib.managers.oauth2.refresh_token_session import RefreshTokenSessionManager
 from lib.managers.oauth2.user_session import UserSessionManager
-from lib.managers.keyring import KeyRingManager
-
-from lib.oauth_2_token.v1.token import Token as Token_v1
-
 from utils import generate_random_uuid, get_current_time
 
 

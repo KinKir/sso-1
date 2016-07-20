@@ -1,15 +1,14 @@
-from lib.generic_token.coder import GenericTokenCoder as Coder
-from lib.generic_token.packer import GenericTokenPacker as Packer
-from lib.generic_token.cryptor import GenericTokenCryptor as Cryptor
-
+import ujson
+import uuid
 from collections import MutableMapping
 
-import uuid
+from lib.containers.generic_session_cookie.cryptor import GenericSessionCookieCryptor as Cryptor
+from lib.containers.generic_session_cookie.packer import GenericSessionCookiePacker as Packer
 
-import ujson
+from lib.containers.generic_session_cookie.coder import GenericSessionCookieCoder as Coder
 
 
-class GenericToken(MutableMapping):
+class GenericSessionCookie(MutableMapping):
 
     def __len__(self):
         return self._dict.__len__()

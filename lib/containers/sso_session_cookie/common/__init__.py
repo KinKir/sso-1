@@ -3,7 +3,7 @@ from abc import (
 )
 
 
-class TokenInterface(metaclass=ABCMeta):
+class SSOSessionCookieInterface(metaclass=ABCMeta):
     @classmethod
     @abstractmethod
     def deserialize(cls, s, key_retrieval_func):
@@ -11,44 +11,12 @@ class TokenInterface(metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def serialize(cls, token, keyid, key_retrieval_func):
+    def serialize(cls, cookie, keyid, key_retrieval_func):
         pass
 
     @classmethod
     @abstractmethod
     def get_key_id(cls, s):
-        pass
-
-    # oauth_2_token id getter and setter
-    @property
-    @abstractmethod
-    def token_id(self):
-        pass
-
-    @token_id.setter
-    @abstractmethod
-    def token_id(self, tid):
-        pass
-
-    # refresh oauth_2_token id getter and setter (Only there if this oauth_2_token is refresh oauth_2_token)
-    @property
-    @abstractmethod
-    def refresh_token_session_id(self):
-        pass
-
-    @refresh_token_session_id.setter
-    @abstractmethod
-    def refresh_token_session_id(self, tid):
-        pass
-
-    @property
-    @abstractmethod
-    def sso_session_id(self):
-        pass
-
-    @sso_session_id.setter
-    @abstractmethod
-    def sso_session_id(self, aid):
         pass
 
     @property
@@ -69,51 +37,80 @@ class TokenInterface(metaclass=ABCMeta):
 
     @user_id.setter
     @abstractmethod
-    def user_id(self, user_id):
+    def user_id(self, uid):
         pass
 
-    # Client id getter and setter
     @property
     @abstractmethod
-    def client_id(self):
+    def provider_id(self):
         pass
 
-    @client_id.setter
+    @provider_id.setter
     @abstractmethod
-    def client_id(self, client_id):
+    def provider_id(self, pid):
         pass
 
-    # User session id getter and setter
     @property
     @abstractmethod
-    def user_session_id(self):
+    def user_data_pointer(self):
         pass
 
-    @user_session_id.setter
+    @user_data_pointer.setter
     @abstractmethod
-    def user_session_id(self, session_id):
+    def user_data_pointer(self, pointer):
+        pass
+
+    # session id getter and setter
+    @property
+    @abstractmethod
+    def sso_session_id(self):
+        pass
+
+    @sso_session_id.setter
+    @abstractmethod
+    def sso_session_id(self, sid):
         pass
 
     # Token type getter and setter
     @property
     @abstractmethod
-    def token_type(self):
+    def sso_session_type(self):
         pass
 
-    @token_type.setter
+    @sso_session_type.setter
     @abstractmethod
-    def token_type(self, type_of_token):
+    def sso_session_type(self, stp):
         pass
 
-    # Client secret hash getter and setter
     @property
     @abstractmethod
-    def client_secret_hash(self):
+    def sso_session_stage(self):
         pass
 
-    @client_secret_hash.setter
+    @sso_session_stage.setter
     @abstractmethod
-    def client_secret_hash(self, secret_hash):
+    def sso_session_stage(self, stg):
+        pass
+
+    @property
+    @abstractmethod
+    def sso_session_meta_data_pointer(self):
+        pass
+
+    @sso_session_meta_data_pointer.setter
+    @abstractmethod
+    def sso_session_meta_data_pointer(self, stg):
+        pass
+
+    # logout token getter and setter
+    @property
+    @abstractmethod
+    def logout_token(self):
+        pass
+
+    @logout_token.setter
+    @abstractmethod
+    def logout_token(self, lt):
         pass
 
     # is impersonated getter and setter
@@ -151,16 +148,6 @@ class TokenInterface(metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def is_refresh_token(self):
-        pass
-
-    @is_refresh_token.setter
-    @abstractmethod
-    def is_refresh_token(self, v):
-        pass
-
-    @property
-    @abstractmethod
     def is_impersonated(self):
         pass
 
@@ -179,14 +166,24 @@ class TokenInterface(metaclass=ABCMeta):
     def is_web(self, v):
         pass
 
-    @property
     @abstractmethod
-    def is_tied_to_sso_session(self):
+    def is_initialized(self):
         pass
 
-    @is_tied_to_sso_session.setter
     @abstractmethod
-    def is_tied_to_sso_session(self, v):
+    def is_choosing_provider(self):
+        pass
+
+    @abstractmethod
+    def is_executing_provider(self):
+        pass
+
+    @abstractmethod
+    def is_user_logged_in(self):
+        pass
+
+    @abstractmethod
+    def is_login_started(self):
         pass
 
     @abstractmethod

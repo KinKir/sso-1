@@ -1,4 +1,4 @@
-from lib.utils.cryptor import Cryptor
+from lib.containers.utils.cryptor import Cryptor
 
 
 class GenericSessionCookieCryptor(Cryptor):

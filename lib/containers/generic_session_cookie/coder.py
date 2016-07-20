@@ -1,4 +1,4 @@
-from lib.utils.coder import Coder
+from lib.containers.utils.coder import Coder
 
 
 class GenericSessionCookieCoder(Coder):

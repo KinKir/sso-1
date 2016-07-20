@@ -1,12 +1,13 @@
-from lib.oauth_2_token.common import TokenInterface
-from lib.generic_token.packer import GenericTokenPacker as Packer
-from lib.generic_token.coder import GenericTokenCoder as Coder
-from lib.generic_token.cryptor import GenericTokenCryptor as Cryptor
-
 import uuid
 
+from lib.containers.generic_token.coder import GenericTokenCoder as Coder
+from lib.containers.generic_token.packer import GenericTokenPacker as Packer
 
-class Token(TokenInterface):
+from lib.containers.generic_token.cryptor import GenericTokenCryptor as Cryptor
+from lib.containers.oauth_2_token.common import OAuth2TokenInterface
+
+
+class OAuth2Token(OAuth2TokenInterface):
 
     TOKEN_TYPE_MOBILE = 1
 
