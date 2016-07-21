@@ -1,9 +1,17 @@
-from sqlalchemy import Column, String, BigInteger, Boolean
+from sqlalchemy import Column, String, BigInteger, Boolean, Enum
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 
 from db.meta import Base
 from db.utils import guid
+
+import enum
+
+
+class SSOSessionType(enum.Enum):
+    mobile = 'Mobile'
+    web = 'Web'
+    unknown = 'Unknown'
 
 
 class SSOSession(Base):
@@ -15,6 +23,8 @@ class SSOSession(Base):
 
     user_id = Column(guid.GUID(), ForeignKey('users.id'), nullable=False)
     user = relationship('User', back_populates='sso_sessions')
+
+    session_type = Column(Enum(SSOSessionType), nullable=False)
 
     # OAuth 2 specific
     oauth_2_user_sessions = relationship('OAuth2UserSession', back_populates='sso_session',
