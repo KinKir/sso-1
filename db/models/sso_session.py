@@ -26,6 +26,9 @@ class SSOSession(Base):
 
     session_type = Column(Enum(SSOSessionType), nullable=False)
 
+    sso_session_extra_data = relationship('SSOSessionExtraData', back_populates='sso_session',
+                                          cascade='all, delete, delete-orphan')
+
     # OAuth 2 specific
     oauth_2_user_sessions = relationship('OAuth2UserSession', back_populates='sso_session',
-                                         cascade="all, delete, delete-orphan")
+                                         cascade='all, delete, delete-orphan')
