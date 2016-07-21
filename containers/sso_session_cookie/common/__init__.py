@@ -156,6 +156,16 @@ class SSOSessionCookieInterface(metaclass=ABCMeta):
     def is_web(self, v):
         pass
 
+    @property
+    @abstractmethod
+    def is_mobile(self):
+        pass
+
+    @is_mobile.setter
+    @abstractmethod
+    def is_mobile(self, v):
+        pass
+
     @abstractmethod
     def is_initialized(self):
         pass

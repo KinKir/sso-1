@@ -14,6 +14,8 @@ class SSOSessionCookie(SSOSessionCookieInterface):
 
     SSO_SESSION_TYPE_WEB = 1
 
+    SSO_SESSION_TYPE_MOBILE = 2
+
     # Field order and their respective size
     tenant_id_length = 16
     user_id_length = 16
@@ -263,6 +265,17 @@ class SSOSessionCookie(SSOSessionCookieInterface):
             self._sso_session_type |= self.SSO_SESSION_TYPE_WEB
         else:
             self._sso_session_type &= (~self.SSO_SESSION_TYPE_WEB)
+
+    @property
+    def is_mobile(self):
+        return (self._sso_session_type & self.SSO_SESSION_TYPE_MOBILE) == self.SSO_SESSION_TYPE_MOBILE
+
+    @is_mobile.setter
+    def is_mobile(self, v):
+        if v:
+            self._sso_session_type |= self.SSO_SESSION_TYPE_MOBILE
+        else:
+            self._sso_session_type &= (~self.SSO_SESSION_TYPE_MOBILE)
 
     def is_initialized(self):
         return self._sso_session_type != self.SSO_SESSION_TYPE_INVALID and \
