@@ -4,6 +4,18 @@ from abc import (
 
 
 class SSOSessionCookieInterface(metaclass=ABCMeta):
+
+    # Stages of session
+    SSO_SESSION_STAGE_NOT_INITIALIZED = 0
+
+    SSO_SESSION_STAGE_LOGIN_STARTED = 1
+
+    SSO_SESSION_STAGE_PROVIDER_CHOOSE = 2
+
+    SSO_SESSION_STAGE_PROVIDER_EXECUTION = 3
+
+    SSO_SESSION_STAGE_LOGGED_IN = 4
+
     @classmethod
     @abstractmethod
     def deserialize(cls, s, key_retrieval_func):

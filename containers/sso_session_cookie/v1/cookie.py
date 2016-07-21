@@ -14,17 +14,6 @@ class SSOSessionCookie(SSOSessionCookieInterface):
 
     SSO_SESSION_TYPE_WEB = 1
 
-    # Stages of session
-    SSO_SESSION_STAGE_NOT_INITIALIZED = 0
-
-    SSO_SESSION_STAGE_LOGIN_STARTED = 1
-
-    SSO_SESSION_STAGE_PROVIDER_CHOOSE = 2
-
-    SSO_SESSION_STAGE_PROVIDER_EXECUTION = 3
-
-    SSO_SESSION_STAGE_LOGGED_IN = 4
-
     # Field order and their respective size
     tenant_id_length = 16
     user_id_length = 16
