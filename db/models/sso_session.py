@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, BigInteger, Boolean, Enum
+from sqlalchemy import Column, BigInteger, Enum
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 
