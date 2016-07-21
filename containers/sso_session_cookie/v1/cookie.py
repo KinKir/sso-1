@@ -23,8 +23,6 @@ class SSOSessionCookie(SSOSessionCookieInterface):
     sso_session_type_length = 1
     sso_session_stage_length = 1
     sso_session_meta_data_pointer_length = 16
-    issued_at_length = 8
-    expires_at_length = 8
     logout_token_length = 32
     impersonation_info_length = 1
 
@@ -36,7 +34,6 @@ class SSOSessionCookie(SSOSessionCookieInterface):
                                cls.user_data_pointer_length + cls.sso_session_id_length +
                                cls.sso_session_type_length + cls.sso_session_stage_length +
                                cls.sso_session_meta_data_pointer_length +
-                               cls.issued_at_length + cls.expires_at_length +
                                cls.logout_token_length + cls.impersonation_info_length)
 
         bin_cookie[bytes_wrote:bytes_wrote + cls.tenant_id_length] = cookie.tenant_id.bytes
@@ -65,14 +62,6 @@ class SSOSessionCookie(SSOSessionCookieInterface):
         bin_cookie[bytes_wrote:bytes_wrote + cls.sso_session_meta_data_pointer_length] = \
             cookie.sso_session_meta_data_pointer.bytes
         bytes_wrote += cls.sso_session_meta_data_pointer_length
-
-        bin_cookie[bytes_wrote:bytes_wrote+cls.issued_at_length] = \
-            cookie.issued_at.to_bytes(cls.issued_at_length, 'big')
-        bytes_wrote += cls.issued_at_length
-
-        bin_cookie[bytes_wrote:bytes_wrote+cls.expires_at_length] = \
-            cookie.expires_at.to_bytes(cls.expires_at_length, 'big')
-        bytes_wrote += cls.expires_at_length
 
         bin_cookie[bytes_wrote:bytes_wrote + cls.logout_token_length] = cookie.logout_token
         bytes_wrote += cls.logout_token_length
@@ -112,12 +101,6 @@ class SSOSessionCookie(SSOSessionCookieInterface):
         obj.sso_session_meta_data_pointer = \
             uuid.UUID(bytes=plaintext[bytes_read:bytes_read + cls.sso_session_meta_data_pointer_length])
         bytes_read += cls.sso_session_meta_data_pointer_length
-
-        obj.issued_at = int.from_bytes(plaintext[bytes_read:bytes_read+cls.issued_at_length], 'big')
-        bytes_read += cls.issued_at_length
-
-        obj.expires_at = int.from_bytes(plaintext[bytes_read:bytes_read+cls.expires_at_length], 'big')
-        bytes_read += cls.expires_at_length
 
         obj.logout_token = plaintext[bytes_read:bytes_read + cls.logout_token_length]
         bytes_read += cls.logout_token_length
@@ -163,8 +146,6 @@ class SSOSessionCookie(SSOSessionCookieInterface):
         self._sso_session_stage = self.SSO_SESSION_STAGE_NOT_INITIALIZED
         self._sso_session_meta_data_pointer = uuid.UUID(hex='0'*32)
         self._impersonation_info = 0
-        self._issued_at = 0
-        self._expires_at = 0
         self._logout_token = bytes(32)
 
     @property
@@ -260,24 +241,6 @@ class SSOSessionCookie(SSOSessionCookieInterface):
             raise OverflowError
         self._impersonation_info = info
 
-    # issued at getter and setter
-    @property
-    def issued_at(self):
-        return self._issued_at
-
-    @issued_at.setter
-    def issued_at(self, iat):
-        self._issued_at = iat
-
-    # Expires at getter and setter
-    @property
-    def expires_at(self):
-        return self._expires_at
-
-    @expires_at.setter
-    def expires_at(self, eat):
-        self._expires_at = eat
-
     @property
     def is_impersonated(self):
         return (self._impersonation_info & self.SSO_SESSION_IMPERSONATION_IS_IMPERSONATED) == \
@@ -306,7 +269,7 @@ class SSOSessionCookie(SSOSessionCookieInterface):
                self._sso_session_stage != self.SSO_SESSION_STAGE_NOT_INITIALIZED
 
     def is_choosing_provider(self):
-        return self._sso_session_stage == self.SSO_SESSION_STAGE_PROVIDER_CHOOSE
+        return self._sso_session_stage == self.SSO_SESSION_STAGE_PROVIDER_CHOSE
 
     def is_executing_provider(self):
         return self._sso_session_stage == self.SSO_SESSION_STAGE_PROVIDER_EXECUTION
@@ -330,9 +293,7 @@ class SSOSessionCookie(SSOSessionCookieInterface):
             'sso_session_type': self.sso_session_type,
             'sso_session_stage': self.sso_session_stage,
             'logout_token': self.logout_token,
-            'impersonation_info': self.impersonation_info,
-            'issued_at': self.issued_at,
-            'expires_at': self.expires_at
+            'impersonation_info': self.impersonation_info
         }
 
 

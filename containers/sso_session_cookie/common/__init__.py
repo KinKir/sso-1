@@ -10,7 +10,7 @@ class SSOSessionCookieInterface(metaclass=ABCMeta):
 
     SSO_SESSION_STAGE_LOGIN_STARTED = 1
 
-    SSO_SESSION_STAGE_PROVIDER_CHOOSE = 2
+    SSO_SESSION_STAGE_PROVIDER_CHOSE = 2
 
     SSO_SESSION_STAGE_PROVIDER_EXECUTION = 3
 
@@ -134,28 +134,6 @@ class SSOSessionCookieInterface(metaclass=ABCMeta):
     @impersonation_info.setter
     @abstractmethod
     def impersonation_info(self, info):
-        pass
-
-    # issued at getter and setter
-    @property
-    @abstractmethod
-    def issued_at(self):
-        pass
-
-    @issued_at.setter
-    @abstractmethod
-    def issued_at(self, iat):
-        pass
-
-    # Expires at getter and setter
-    @property
-    @abstractmethod
-    def expires_at(self):
-        pass
-
-    @expires_at.setter
-    @abstractmethod
-    def expires_at(self, eat):
         pass
 
     @property
