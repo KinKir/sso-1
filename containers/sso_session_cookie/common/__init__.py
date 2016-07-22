@@ -136,6 +136,28 @@ class SSOSessionCookieInterface(metaclass=ABCMeta):
     def impersonation_info(self, info):
         pass
 
+    # issued at getter and setter
+    @property
+    @abstractmethod
+    def issued_at(self):
+        pass
+
+    @issued_at.setter
+    @abstractmethod
+    def issued_at(self, iat):
+        pass
+
+    # Expires at getter and setter
+    @property
+    @abstractmethod
+    def expires_at(self):
+        pass
+
+    @expires_at.setter
+    @abstractmethod
+    def expires_at(self, eat):
+        pass
+
     @property
     @abstractmethod
     def is_impersonated(self):
