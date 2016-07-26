@@ -23,7 +23,6 @@ class SSOSessionCookie(SSOSessionCookieInterface):
     user_data_pointer_length = 16
     sso_session_id_length = 16
     sso_session_type_length = 1
-    sso_session_stage_length = 1
     sso_session_meta_data_pointer_length = 16
     issued_at_length = 8
     expires_at_length = 8
@@ -36,7 +35,7 @@ class SSOSessionCookie(SSOSessionCookieInterface):
 
         bin_cookie = bytearray(cls.tenant_id_length + cls.user_id_length+cls.provider_id_length +
                                cls.user_data_pointer_length + cls.sso_session_id_length +
-                               cls.sso_session_type_length + cls.sso_session_stage_length +
+                               cls.sso_session_type_length +
                                cls.sso_session_meta_data_pointer_length +
                                cls.issued_at_length + cls.expires_at_length +
                                cls.logout_token_length + cls.impersonation_info_length)
@@ -59,10 +58,6 @@ class SSOSessionCookie(SSOSessionCookieInterface):
         bin_cookie[bytes_wrote:bytes_wrote + cls.sso_session_type_length] = \
             cookie.sso_session_type.to_bytes(1, byteorder='big')
         bytes_wrote += cls.sso_session_type_length
-
-        bin_cookie[bytes_wrote:bytes_wrote + cls.sso_session_stage_length] = \
-            cookie.sso_session_stage.to_bytes(1, byteorder='big')
-        bytes_wrote += cls.sso_session_stage_length
 
         bin_cookie[bytes_wrote:bytes_wrote + cls.sso_session_meta_data_pointer_length] = \
             cookie.sso_session_meta_data_pointer.bytes
@@ -107,9 +102,6 @@ class SSOSessionCookie(SSOSessionCookieInterface):
 
         obj.sso_session_type = int.from_bytes(plaintext[bytes_read:bytes_read + cls.sso_session_type_length], 'big')
         bytes_read += cls.sso_session_type_length
-
-        obj.sso_session_stage = int.from_bytes(plaintext[bytes_read:bytes_read + cls.sso_session_stage_length], 'big')
-        bytes_read += cls.sso_session_stage_length
 
         obj.sso_session_meta_data_pointer = \
             uuid.UUID(bytes=plaintext[bytes_read:bytes_read + cls.sso_session_meta_data_pointer_length])
@@ -162,7 +154,6 @@ class SSOSessionCookie(SSOSessionCookieInterface):
         self._user_data_pointer = uuid.UUID(hex='0'*32)
         self._sso_session_id = uuid.UUID(hex='0' * 32)
         self._sso_session_type = self.SSO_SESSION_TYPE_INVALID
-        self._sso_session_stage = self.SSO_SESSION_STAGE_NOT_INITIALIZED
         self._sso_session_meta_data_pointer = uuid.UUID(hex='0'*32)
         self._impersonation_info = 0
         self._issued_at = 0
@@ -221,18 +212,6 @@ class SSOSessionCookie(SSOSessionCookieInterface):
         if stp >= 256:
             raise OverflowError
         self._sso_session_type = stp
-
-    @property
-    def sso_session_stage(self):
-        return self._sso_session_stage
-
-    @sso_session_stage.setter
-    def sso_session_stage(self, stg):
-        if stg >= 256:
-            raise OverflowError
-        if stg - self._sso_session_stage > 1:
-            raise NotImplementedError
-        self._sso_session_stage = stg
 
     @property
     def sso_session_meta_data_pointer(self):
