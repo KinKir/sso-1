@@ -20,7 +20,7 @@ class GenericSessionCookie(MutableMapping):
         return self._dict.__iter__()
 
     def __setitem__(self, key, value):
-        if not isinstance(key, str):
+        if not isinstance(key, str) and not isinstance(key, int):
             raise NotImplementedError
         return self._dict.__setitem__(key, value)
 
