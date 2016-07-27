@@ -2,13 +2,13 @@ import ujson
 import uuid
 from collections import MutableMapping
 
-from containers.generic_session_cookie.cryptor import GenericSessionCookieCryptor as Cryptor
-from containers.generic_session_cookie.packer import GenericSessionCookiePacker as Packer
+from containers.generic_session.cryptor import GenericSessionCryptor as Cryptor
+from containers.generic_session.packer import GenericSessionPacker as Packer
 
-from containers.generic_session_cookie.coder import GenericSessionCookieCoder as Coder
+from containers.generic_session.coder import GenericSessionCoder as Coder
 
 
-class GenericSessionCookie(MutableMapping):
+class GenericSession(MutableMapping):
 
     def __len__(self):
         return self._dict.__len__()

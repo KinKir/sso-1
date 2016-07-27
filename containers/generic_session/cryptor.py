@@ -1,5 +1,5 @@
 from containers.utils.cryptor import Cryptor
 
 
-class GenericSessionCookieCryptor(Cryptor):
+class GenericSessionCryptor(Cryptor):
     pass

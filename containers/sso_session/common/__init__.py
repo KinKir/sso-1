@@ -3,7 +3,7 @@ from abc import (
 )
 
 
-class SSOSessionCookieInterface(metaclass=ABCMeta):
+class SSOSessionInterface(metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
@@ -165,26 +165,6 @@ class SSOSessionCookieInterface(metaclass=ABCMeta):
     @is_mobile.setter
     @abstractmethod
     def is_mobile(self, v):
-        pass
-
-    @abstractmethod
-    def is_initialized(self):
-        pass
-
-    @abstractmethod
-    def is_choosing_provider(self):
-        pass
-
-    @abstractmethod
-    def is_executing_provider(self):
-        pass
-
-    @abstractmethod
-    def is_user_logged_in(self):
-        pass
-
-    @abstractmethod
-    def is_login_started(self):
         pass
 
     @abstractmethod

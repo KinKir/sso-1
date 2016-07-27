@@ -1,13 +1,13 @@
 import uuid
 
-from containers.generic_session_cookie.cryptor import GenericSessionCookieCryptor as Cryptor
-from containers.generic_session_cookie.packer import GenericSessionCookiePacker as Packer
+from containers.generic_session.cryptor import GenericSessionCryptor as Cryptor
+from containers.generic_session.packer import GenericSessionPacker as Packer
 
-from containers.generic_session_cookie.coder import GenericSessionCookieCoder as Coder
-from containers.sso_session_cookie.common import SSOSessionCookieInterface
+from containers.generic_session.coder import GenericSessionCoder as Coder
+from containers.sso_session.common import SSOSessionInterface
 
 
-class SSOSessionCookie(SSOSessionCookieInterface):
+class SSOSession(SSOSessionInterface):
     SSO_SESSION_IMPERSONATION_IS_IMPERSONATED = 2
 
     SSO_SESSION_TYPE_INVALID = 0
@@ -30,55 +30,55 @@ class SSOSessionCookie(SSOSessionCookieInterface):
     impersonation_info_length = 1
 
     @classmethod
-    def _tobin(cls, cookie):
+    def _tobin(cls, obj):
         bytes_wrote = 0
 
-        bin_cookie = bytearray(cls.tenant_id_length + cls.user_id_length+cls.provider_id_length +
-                               cls.user_data_pointer_length + cls.sso_session_id_length +
-                               cls.sso_session_type_length +
-                               cls.sso_session_meta_data_pointer_length +
-                               cls.issued_at_length + cls.expires_at_length +
-                               cls.logout_token_length + cls.impersonation_info_length)
+        bin_obj = bytearray(cls.tenant_id_length + cls.user_id_length + cls.provider_id_length +
+                            cls.user_data_pointer_length + cls.sso_session_id_length +
+                            cls.sso_session_type_length +
+                            cls.sso_session_meta_data_pointer_length +
+                            cls.issued_at_length + cls.expires_at_length +
+                            cls.logout_token_length + cls.impersonation_info_length)
 
-        bin_cookie[bytes_wrote:bytes_wrote + cls.tenant_id_length] = cookie.tenant_id.bytes
+        bin_obj[bytes_wrote:bytes_wrote + cls.tenant_id_length] = obj.tenant_id.bytes
         bytes_wrote += cls.tenant_id_length
 
-        bin_cookie[bytes_wrote:bytes_wrote + cls.user_id_length] = cookie.user_id.bytes
+        bin_obj[bytes_wrote:bytes_wrote + cls.user_id_length] = obj.user_id.bytes
         bytes_wrote += cls.user_id_length
 
-        bin_cookie[bytes_wrote:bytes_wrote + cls.provider_id_length] = cookie.provider_id.bytes
+        bin_obj[bytes_wrote:bytes_wrote + cls.provider_id_length] = obj.provider_id.bytes
         bytes_wrote += cls.provider_id_length
 
-        bin_cookie[bytes_wrote:bytes_wrote + cls.user_data_pointer_length] = cookie.user_data_pointer.bytes
+        bin_obj[bytes_wrote:bytes_wrote + cls.user_data_pointer_length] = obj.user_data_pointer.bytes
         bytes_wrote += cls.user_data_pointer_length
 
-        bin_cookie[bytes_wrote:bytes_wrote + cls.sso_session_id_length] = cookie.sso_session_id.bytes
+        bin_obj[bytes_wrote:bytes_wrote + cls.sso_session_id_length] = obj.sso_session_id.bytes
         bytes_wrote += cls.sso_session_id_length
 
-        bin_cookie[bytes_wrote:bytes_wrote + cls.sso_session_type_length] = \
-            cookie.sso_session_type.to_bytes(1, byteorder='big')
+        bin_obj[bytes_wrote:bytes_wrote + cls.sso_session_type_length] = \
+            obj.sso_session_type.to_bytes(1, byteorder='big')
         bytes_wrote += cls.sso_session_type_length
 
-        bin_cookie[bytes_wrote:bytes_wrote + cls.sso_session_meta_data_pointer_length] = \
-            cookie.sso_session_meta_data_pointer.bytes
+        bin_obj[bytes_wrote:bytes_wrote + cls.sso_session_meta_data_pointer_length] = \
+            obj.sso_session_meta_data_pointer.bytes
         bytes_wrote += cls.sso_session_meta_data_pointer_length
 
-        bin_cookie[bytes_wrote:bytes_wrote+cls.issued_at_length] = \
-            cookie.issued_at.to_bytes(cls.issued_at_length, 'big')
+        bin_obj[bytes_wrote:bytes_wrote+cls.issued_at_length] = \
+            obj.issued_at.to_bytes(cls.issued_at_length, 'big')
         bytes_wrote += cls.issued_at_length
 
-        bin_cookie[bytes_wrote:bytes_wrote+cls.expires_at_length] = \
-            cookie.expires_at.to_bytes(cls.expires_at_length, 'big')
+        bin_obj[bytes_wrote:bytes_wrote+cls.expires_at_length] = \
+            obj.expires_at.to_bytes(cls.expires_at_length, 'big')
         bytes_wrote += cls.expires_at_length
 
-        bin_cookie[bytes_wrote:bytes_wrote + cls.logout_token_length] = cookie.logout_token
+        bin_obj[bytes_wrote:bytes_wrote + cls.logout_token_length] = obj.logout_token
         bytes_wrote += cls.logout_token_length
 
-        bin_cookie[bytes_wrote:bytes_wrote+cls.impersonation_info_length] = \
-            cookie.impersonation_info.to_bytes(1, byteorder='big')
+        bin_obj[bytes_wrote:bytes_wrote+cls.impersonation_info_length] = \
+            obj.impersonation_info.to_bytes(1, byteorder='big')
         bytes_wrote += cls.impersonation_info_length
 
-        return bin_cookie
+        return bin_obj
 
     @classmethod
     def _parse(cls, plaintext):
@@ -137,12 +137,12 @@ class SSOSessionCookie(SSOSessionCookieInterface):
         return keyid, cls._parse(plaintext)
 
     @classmethod
-    def serialize(cls, cookie, keyid, key_retrieval_func):
-        if not isinstance(cookie, cls):
+    def serialize(cls, obj, keyid, key_retrieval_func):
+        if not isinstance(obj, cls):
             # TODO: Raise an error
             pass
         key = key_retrieval_func(keyid)
-        plaintext = cls._tobin(cookie)
+        plaintext = cls._tobin(obj)
         iv, ciphertext, tag = Cryptor.encrypt(key, plaintext, None)
         packed = Packer.pack(iv, ciphertext, tag, None, keyid.bytes)
         return Coder.encode(packed)
@@ -293,22 +293,6 @@ class SSOSessionCookie(SSOSessionCookieInterface):
         else:
             self._sso_session_type &= (~self.SSO_SESSION_TYPE_MOBILE)
 
-    def is_initialized(self):
-        return self._sso_session_type != self.SSO_SESSION_TYPE_INVALID and \
-               self._sso_session_stage != self.SSO_SESSION_STAGE_NOT_INITIALIZED
-
-    def is_choosing_provider(self):
-        return self._sso_session_stage == self.SSO_SESSION_STAGE_PROVIDER_CHOSE
-
-    def is_executing_provider(self):
-        return self._sso_session_stage == self.SSO_SESSION_STAGE_PROVIDER_EXECUTION
-
-    def is_user_logged_in(self):
-        return self._sso_session_stage == self.SSO_SESSION_STAGE_LOGGED_IN
-
-    def is_login_started(self):
-        return self._sso_session_stage == self.SSO_SESSION_STAGE_LOGGED_IN
-
     def is_valid(self):
         pass
 
@@ -320,7 +304,6 @@ class SSOSessionCookie(SSOSessionCookieInterface):
             'user_data_pointer': self.user_data_pointer,
             'sso_session_id': self.sso_session_id,
             'sso_session_type': self.sso_session_type,
-            'sso_session_stage': self.sso_session_stage,
             'logout_token': self.logout_token,
             'impersonation_info': self.impersonation_info,
             'issued_at': self.issued_at,
