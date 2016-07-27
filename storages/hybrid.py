@@ -61,7 +61,7 @@ class HybridStorage(object):
 
         storage_id = uuid.UUID(hex=cookie_part[len(metadata):self._UUID_HEX_LENGTH+len(metadata)])
 
-        redis_part = self._redis_client.get(storage_id)
+        redis_part = self._redis_client.get(storage_id).decode(encoding='utf-8', errors='strict')
         if redis_part is None:
             return None
 
