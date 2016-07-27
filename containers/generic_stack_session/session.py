@@ -47,3 +47,6 @@ class GenericStackSession(GenericSession):
     def get_session_args(self, sid):
         session = self.get_session(sid)
         return session.get(self.ARGUMENT_KEY)
+
+    def get_max_sid_issued(self):
+        return self._next_sid - 1
