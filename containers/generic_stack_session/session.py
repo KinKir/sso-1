@@ -18,6 +18,7 @@ class GenericStackSession(GenericSession):
         current_sid = self._next_sid
         self[self.STORAGE_KEY][current_sid] = {self.ARGUMENT_KEY: args}
         self._next_sid += 1
+        return self._next_sid
 
     def pop_session(self):
         if self._next_sid == 0:
