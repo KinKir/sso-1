@@ -20,6 +20,26 @@ class HybridStorage(object):
         self._max_cookie_limit = max_cookie_limit
         self._time_delta = time_delta
 
+    def delete(self, request, response):
+        cookie_part = request.cookies.get(self._cookie_name)
+        response.set_cookie(self._cookie_name, '', expires=0)
+
+        if cookie_part is None:
+            return
+
+        metadata = cookie_part[0]
+        if metadata != self._PARTIAL_COOKIE and metadata != self._WHOLE_COOKIE:
+            return
+
+        if metadata == self._WHOLE_COOKIE:
+            return
+
+        if len(cookie_part) < (len(metadata) + self._UUID_HEX_LENGTH):
+            return
+
+        storage_id = uuid.UUID(hex=cookie_part[len(metadata):self._UUID_HEX_LENGTH+len(metadata)])
+        self._redis_client.delete(storage_id)
+
     def store(self, response, storage_id, data, purge_old_data=True):
         metadata = self._WHOLE_COOKIE
 
