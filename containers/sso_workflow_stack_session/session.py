@@ -5,6 +5,8 @@ class SSOWorkflowStackSession(object):
 
     ARGS_KEY = 'a'
 
+    SESSION_ORDER = ['SSO_SESSION', 'PROVIDER_SESSION', 'PROVIDER_INSTANCE_SESSION']
+
     SESSIONS = {
         'SSO_SESSION': {
             'RELATIVE_SID': 1,
@@ -39,6 +41,9 @@ class SSOWorkflowStackSession(object):
         pass
 
     def transition_to_session(self, session_name, args):
+        pass
+
+    def exit_current_session(self):
         pass
 
     def get_raw_data(self):
