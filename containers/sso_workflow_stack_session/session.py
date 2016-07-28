@@ -27,8 +27,8 @@ class SSOWorkflowStackSession(object):
 
     ID = 'sso'
 
-    def __init__(self, starting_sid):
-        self._stack_session = GenericStackSession(self.ID)
+    def __init__(self, starting_sid, stack_session_instance):
+        self._stack_session = stack_session_instance
         self.__starting_sid = starting_sid
 
     def is_in_session(self, session_name):
