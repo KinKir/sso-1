@@ -9,9 +9,12 @@ class GenericStackSession(GenericSession):
 
     STORAGE_KEY = 'd'
 
+    ARCHIVE_KEY = 'e'
+
     def __init__(self):
         super(GenericSession, self).__init__()
         self[self.STORAGE_KEY] = {}
+        self[self.ARCHIVE_KEY] = {}
         self._next_sid = 0
 
     def push_session(self, args):
@@ -26,6 +29,7 @@ class GenericStackSession(GenericSession):
 
         current_sid = self._next_sid - 1
         ret_val = self[self.STORAGE_KEY][current_sid].get(self.RET_VAL_KEY)
+        self[self.ARCHIVE_KEY][current_sid] = self[self.STORAGE_KEY][current_sid]
 
         del self[self.STORAGE_KEY][current_sid]
         self._next_sid -= 1
