@@ -11,10 +11,13 @@ class GenericStackSession(GenericSession):
 
     ARCHIVE_KEY = 'e'
 
-    def __init__(self):
+    ID_KEY = 'i'
+
+    def __init__(self, stack_id):
         super(GenericSession, self).__init__()
         self[self.STORAGE_KEY] = {}
         self[self.ARCHIVE_KEY] = {}
+        self[self.ID_KEY] = stack_id
         self._next_sid = 0
 
     def push_session(self, args):
