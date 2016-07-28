@@ -44,10 +44,3 @@ class SSOWorkflowStackSession(object):
     def get_raw_data(self):
         pass
 
-    @classmethod
-    def deserialize(cls, s):
-        pass
-
-    @classmethod
-    def serialize(cls, instance):
-        pass
