@@ -1,4 +1,4 @@
-class SSOWorkflowStackSession(object):
+class GenericWorkflowStackSession(object):
 
     NAME_KEY = 'name'
 
