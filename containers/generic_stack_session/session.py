@@ -48,3 +48,6 @@ class GenericStackSession(GenericSession):
 
     def get_max_sid_issued(self):
         return self._next_sid - 1
+
+    def get_archived_sessions(self):
+        return self[self.ARCHIVE_KEY]
