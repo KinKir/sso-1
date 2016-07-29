@@ -57,16 +57,22 @@ class GenericWorkflowStackSession(object):
             return False
         relative_sid = session_info[self.RELATIVE_SID_KEY]
         current_session_relative_sid, _, _ = self._get_current_session()
+        if current_session_relative_sid is None:
+            pass  # Raise an error
         return current_session_relative_sid == relative_sid
 
     def store_in_current_session(self, key, val):
         _, session_name, session = self._get_current_session()
+        if session is None:
+            pass  # Raise an error
         if key not in self._sessions_by_key[session_name][self.ALLOWED_STORAGE_KEY]:
             pass  # Raise an error
         session[key] = val
 
     def get_current_session_args(self):
         _, session_name, session = self._get_current_session()
+        if session is None:
+            pass  # Raise an error
         recorded_args = {}
         for arg_key in self._sessions_by_key[session_name][self.ALLOWED_ARGS_KEY]:
             recorded_args[arg_key] = session[arg_key]
@@ -95,6 +101,10 @@ class GenericWorkflowStackSession(object):
         current_session_relative_sid, current_session_name, current_session = self._get_current_session()
         if current_session is None:
             pass  # Raise an error
+
+        if current_session_relative_sid == self._starting_sid:
+            self._stack_session.pop_session()
+            return None
 
         for ret_val_key in self._sessions_by_key[current_session_name][self.ALLOWED_RETURN_VALUES_KEY]:
             if ret_val_key not in current_session:
@@ -127,7 +137,7 @@ class GenericWorkflowStackSession(object):
         current_sid, current_session = self._stack_session.get_current_session()
         if current_session is None:
             return None, None, None
-        if (self._starting_sid + len(self._sessions_by_order)) <= current_sid:
+        if (self._starting_sid + len(self._sessions_by_order)) <= current_sid or self._starting_sid > current_sid:
             return None, None, None
         relative_sid = current_sid - self._starting_sid
         return relative_sid, self._sessions_by_order[relative_sid][self.NAME_KEY], current_session
