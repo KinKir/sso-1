@@ -20,7 +20,7 @@ class GenericStackSession(GenericSession):
         current_sid = self._next_sid
         self[self.STORAGE_KEY][current_sid] = {}
         self._next_sid += 1
-        return self._next_sid
+        return self._next_sid, self[self.STORAGE_KEY][current_sid]
 
     def pop_session(self):
         if self._next_sid == 0:
@@ -37,7 +37,11 @@ class GenericStackSession(GenericSession):
         if self._next_sid == 0:
             raise OverflowError
         current_sid = self._next_sid - 1
-        return self[self.STORAGE_KEY][current_sid]
+        return current_sid, self[self.STORAGE_KEY][current_sid]
+
+    def store_in_current_session(self, key, value):
+        _, current_session = self.get_current_session()
+        current_session[key] = value
 
     def get_session(self, sid):
         return self[self.STORAGE_KEY].get(sid)
