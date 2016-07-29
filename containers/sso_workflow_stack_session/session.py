@@ -2,25 +2,26 @@
 
 class SSOWorkflowStackSession(object):
 
-    ARGS_KEY = 'a'
-
     SESSION_ORDER = ['SSO_SESSION', 'PROVIDER_SESSION', 'PROVIDER_INSTANCE_SESSION']
 
     SESSIONS = {
         'SSO_SESSION': {
             'RELATIVE_SID': 1,
             'ARGS': ['pcr'],
-            'VALID_STORAGE_KEYS': ['pcr'] + [ARGS_KEY]
+            'STORAGE_KEYS': [],
+            'RET_VAL_KEYS': ['uid']
         },
         'PROVIDER_SESSION': {
             'RELATIVE_SID': 2,
             'ARGS': ['pid'],
-            'VALID_STORAGE_KEYS': ['pid'] + [ARGS_KEY]
+            'STORAGE_KEYS': [],
+            'RET_VAL_KEYS': ['udp']
         },
         'PROVIDER_INSTANCE_SESSION': {
             'RELATIVE_SID': 3,
-            'ARGS': None,
-            'VALID_STORAGE_KEYS': None
+            'ARGS': [],
+            'STORAGE_KEYS': [],
+            'RET_VAL_KEYS': ['udp']
         }
     }
 
