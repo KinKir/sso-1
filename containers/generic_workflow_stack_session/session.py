@@ -73,16 +73,16 @@ class GenericWorkflowStackSession(object):
         return recorded_args
 
     def enter_session(self, session_name, args):
-        if not self.is_entering_allowed(session_name):
+        if not self._is_entering_allowed(session_name):
             pass  # Raise an error
 
         recorded_args = {}
-        _, current_session_name, current_session = self._stack_session.get_current_session()
-
-        for arg_key in self._sessions_by_key[current_session_name][self.ALLOWED_ARGS_KEY]:
-            if arg_key not in args:
-                pass  # Raise an error
-            recorded_args[arg_key] = args[arg_key]
+        _, current_session_name, current_session = self._get_current_session()
+        if current_session is not None:
+            for arg_key in self._sessions_by_key[current_session_name][self.ALLOWED_ARGS_KEY]:
+                if arg_key not in args:
+                    pass  # Raise an error
+                recorded_args[arg_key] = args[arg_key]
 
         _, next_session = self._stack_session.push_session()
 
@@ -92,8 +92,8 @@ class GenericWorkflowStackSession(object):
     def exit_session(self, return_values):
         recorded_return_val = {}
 
-        current_session_relative_sid, current_session_name, current_session = self._stack_session.get_current_session()
-        if current_session_relative_sid == self._starting_sid:
+        current_session_relative_sid, current_session_name, current_session = self._get_current_session()
+        if current_session is None:
             pass  # Raise an error
 
         for ret_val_key in self._sessions_by_key[current_session_name][self.ALLOWED_RETURN_VALUES_KEY]:
@@ -102,23 +102,32 @@ class GenericWorkflowStackSession(object):
             recorded_return_val[ret_val_key] = return_values[ret_val_key]
 
         self._stack_session.pop_session()
-        _, _, previous_session = self._stack_session.get_current_session()
+        _, _, previous_session = self._get_current_session()
 
         for key in self._sessions_by_key[current_session_name][self.ALLOWED_RETURN_VALUES_KEY]:
             previous_session[key] = recorded_return_val[key]
         return recorded_return_val
 
-    def is_entering_allowed(self, session_name):
-        current_relative_sid, _, _ = self._get_current_session()
+    def _is_entering_allowed(self, session_name):
         if self._sessions_by_key.get(session_name) is None:
             return False
-        if self._sessions_by_key.get(session_name)[self.RELATIVE_SID_KEY] != current_relative_sid + 1:
+
+        current_relative_sid, _, _ = self._get_current_session()
+        if current_relative_sid is None:
+            global_sid, _ = self._stack_session.get_current_session()
+            if global_sid != self._starting_sid - 1 or \
+                    self._sessions_by_key.get(session_name)[self.RELATIVE_SID_KEY] != self._starting_sid:
+                return False
+        elif self._sessions_by_key.get(session_name)[self.RELATIVE_SID_KEY] != current_relative_sid + 1:
             return False
+
         return True
 
     def _get_current_session(self):
         current_sid, current_session = self._stack_session.get_current_session()
+        if current_session is None:
+            return None, None, None
         if (self._starting_sid + len(self._sessions_by_order)) <= current_sid:
-            return None, None
+            return None, None, None
         relative_sid = current_sid - self._starting_sid
         return relative_sid, self._sessions_by_order[relative_sid][self.NAME_KEY], current_session

@@ -35,7 +35,7 @@ class GenericStackSession(GenericSession):
 
     def get_current_session(self):
         if self._next_sid == 0:
-            raise OverflowError
+            return None, None
         current_sid = self._next_sid - 1
         return current_sid, self[self.STORAGE_KEY][current_sid]
 
