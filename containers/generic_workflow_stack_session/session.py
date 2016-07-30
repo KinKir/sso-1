@@ -56,8 +56,8 @@ class GenericWorkflowStackSession(object):
         if session_info is None:
             return False
         relative_sid = session_info[self.RELATIVE_SID_KEY]
-        current_session_relative_sid, _, _ = self._get_current_session()
-        if current_session_relative_sid is None:
+        current_session_relative_sid, _, current_session = self._get_current_session()
+        if current_session is None:
             pass  # Raise an error
         return current_session_relative_sid == relative_sid
 
@@ -122,8 +122,8 @@ class GenericWorkflowStackSession(object):
         if self._sessions_by_key.get(session_name) is None:
             return False
 
-        current_relative_sid, _, _ = self._get_current_session()
-        if current_relative_sid is None:
+        current_relative_sid, _, current_session = self._get_current_session()
+        if current_session is None:
             global_sid, _ = self._stack_session.get_current_session()
             if global_sid != self._starting_sid - 1 or \
                     self._sessions_by_key.get(session_name)[self.RELATIVE_SID_KEY] != self._starting_sid:

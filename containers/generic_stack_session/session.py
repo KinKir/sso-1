@@ -34,9 +34,9 @@ class GenericStackSession(GenericSession):
         return self._next_sid
 
     def get_current_session(self):
-        if self._next_sid == 0:
-            return None, None
         current_sid = self._next_sid - 1
+        if current_sid == -1:
+            return -1, None
         return current_sid, self[self.STORAGE_KEY][current_sid]
 
     def store_in_current_session(self, key, value):
