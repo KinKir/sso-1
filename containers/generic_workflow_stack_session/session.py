@@ -1,4 +1,8 @@
 from exceptions import NoWorkFlowSessionEntered
+from exceptions import InvalidWorkflowTemplate
+from exceptions import ReturnArgKeyNotPresent
+from exceptions import ArgKeyNotPresent
+from exceptions import StorageKeyNotPresent
 
 
 class GenericWorkflowStackSession(object):
@@ -17,7 +21,7 @@ class GenericWorkflowStackSession(object):
         self._stack_session = stack_session_instance
         self._starting_sid = starting_sid
         if not self._is_workflow_template_valid(workflow_template):
-            pass  # Raise an error
+            raise InvalidWorkflowTemplate()
         self._sessions_by_order, self._sessions_by_key = self._index_sessions(workflow_template)
 
     def _is_workflow_template_valid(self, workflow_template):
@@ -69,7 +73,7 @@ class GenericWorkflowStackSession(object):
         if session is None:
             raise NoWorkFlowSessionEntered()
         if key not in self._sessions_by_key[session_name][self.ALLOWED_STORAGE_KEY]:
-            pass  # Raise an error
+            raise StorageKeyNotPresent(key)
         session[key] = val
 
     def get_current_session_args(self):
@@ -90,7 +94,7 @@ class GenericWorkflowStackSession(object):
         if current_session is not None:
             for arg_key in self._sessions_by_key[current_session_name][self.ALLOWED_ARGS_KEY]:
                 if arg_key not in args:
-                    pass  # Raise an error
+                    raise ArgKeyNotPresent(arg_key)
                 recorded_args[arg_key] = args[arg_key]
 
         _, next_session = self._stack_session.push_session()
@@ -111,7 +115,7 @@ class GenericWorkflowStackSession(object):
 
         for ret_val_key in self._sessions_by_key[current_session_name][self.ALLOWED_RETURN_VALUES_KEY]:
             if ret_val_key not in current_session:
-                pass  # Raise an error
+                return ReturnArgKeyNotPresent(ret_val_key)
             recorded_return_val[ret_val_key] = return_values[ret_val_key]
 
         self._stack_session.pop_session()

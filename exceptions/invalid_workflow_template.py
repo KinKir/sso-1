@@ -1,0 +1,2 @@
+class InvalidWorkflowTemplate(Exception):
+    pass
