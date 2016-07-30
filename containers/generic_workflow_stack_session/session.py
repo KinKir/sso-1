@@ -1,3 +1,6 @@
+from exceptions import NoWorkFlowSessionEntered
+
+
 class GenericWorkflowStackSession(object):
 
     NAME_KEY = 'name'
@@ -58,13 +61,13 @@ class GenericWorkflowStackSession(object):
         relative_sid = session_info[self.RELATIVE_SID_KEY]
         current_session_relative_sid, _, current_session = self._get_current_session()
         if current_session is None:
-            pass  # Raise an error
+            raise NoWorkFlowSessionEntered()
         return current_session_relative_sid == relative_sid
 
     def store_in_current_session(self, key, val):
         _, session_name, session = self._get_current_session()
         if session is None:
-            pass  # Raise an error
+            raise NoWorkFlowSessionEntered()
         if key not in self._sessions_by_key[session_name][self.ALLOWED_STORAGE_KEY]:
             pass  # Raise an error
         session[key] = val
@@ -72,7 +75,7 @@ class GenericWorkflowStackSession(object):
     def get_current_session_args(self):
         _, session_name, session = self._get_current_session()
         if session is None:
-            pass  # Raise an error
+            raise NoWorkFlowSessionEntered()
         recorded_args = {}
         for arg_key in self._sessions_by_key[session_name][self.ALLOWED_ARGS_KEY]:
             recorded_args[arg_key] = session[arg_key]
@@ -100,7 +103,7 @@ class GenericWorkflowStackSession(object):
 
         current_session_relative_sid, current_session_name, current_session = self._get_current_session()
         if current_session is None:
-            pass  # Raise an error
+            raise NoWorkFlowSessionEntered()
 
         if current_session_relative_sid == self._starting_sid:
             self._stack_session.pop_session()
