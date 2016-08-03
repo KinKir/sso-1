@@ -18,4 +18,7 @@ class EnterpriseProvider(Base):
     tenant_id = Column(guid.GUID(), ForeignKey('tenants.id'), nullable=False)
     tenant = relationship('Tenant', back_populates='enterprise_providers')
 
+    organization_id = Column(guid.GUID(), ForeignKey('organizations.id'), nullable=False)
+    organization = relationship('Organization', back_populates='enterprise_providers')
+
 

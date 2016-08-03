@@ -27,4 +27,6 @@ class Organization(Base):
     tenant_id = Column(guid.GUID(), ForeignKey('tenants.id'), nullable=False)
     tenant = relationship('Tenant', back_populates='organizations')
 
+    enterprise_providers = relationship('EnterpriseProvider', back_populates='organization')
+
     users = relationship('User', secondary=user_organization_association, back_populates='organizations')
