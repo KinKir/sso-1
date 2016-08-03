@@ -15,8 +15,11 @@ class Tenant(Base):
     css = Column(String, nullable=True)
 
     organizations = relationship('Organization', back_populates='tenant')
-    providers = relationship('Provider', back_populates='tenant')
+    social_providers = relationship('SocialProvider', back_populates='tenant')
+    enterprise_providers = relationship('EnterpriseProvider', back_populates='tenant')
     users = relationship('User', back_populates='tenant')
+
+    oauth_2_clients = relationship('OAuth2Client', back_populates='tenant')
 
     tenant_extra_data = relationship('TenantExtraData', back_populates='tenant')
 
