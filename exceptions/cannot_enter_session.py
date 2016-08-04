@@ -1,0 +1,2 @@
+class CannotEnterSession(Exception):
+    pass

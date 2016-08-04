@@ -3,6 +3,7 @@ from exceptions import InvalidWorkflowTemplate
 from exceptions import ReturnArgKeyNotPresent
 from exceptions import ArgKeyNotPresent
 from exceptions import StorageKeyNotPresent
+from exceptions import CannotEnterSession
 
 
 class GenericWorkflowStackSession(object):
@@ -63,10 +64,10 @@ class GenericWorkflowStackSession(object):
         if session_info is None:
             return False
         relative_sid = session_info[self.RELATIVE_SID_KEY]
-        current_session_relative_sid, _, current_session = self._get_current_session()
+        current_relative_sid, _, current_session = self._get_current_session()
         if current_session is None:
             raise NoWorkFlowSessionEntered()
-        return current_session_relative_sid == relative_sid
+        return current_relative_sid == relative_sid
 
     def store_in_current_session(self, key, val):
         _, session_name, session = self._get_current_session()
@@ -87,7 +88,7 @@ class GenericWorkflowStackSession(object):
 
     def enter_session(self, session_name, args):
         if not self._is_entering_allowed(session_name):
-            pass  # Raise an error
+            raise CannotEnterSession()
 
         recorded_args = {}
         _, current_session_name, current_session = self._get_current_session()
@@ -105,11 +106,11 @@ class GenericWorkflowStackSession(object):
     def exit_session(self, return_values):
         recorded_return_val = {}
 
-        current_session_relative_sid, current_session_name, current_session = self._get_current_session()
+        current_relative_sid, current_session_name, current_session = self._get_current_session()
         if current_session is None:
             raise NoWorkFlowSessionEntered()
 
-        if current_session_relative_sid == self._starting_sid:
+        if current_relative_sid == self._starting_sid:
             self._stack_session.pop_session()
             return None
 
@@ -141,10 +142,11 @@ class GenericWorkflowStackSession(object):
         return True
 
     def _get_current_session(self):
-        current_sid, current_session = self._stack_session.get_current_session()
+        current_global_sid, current_session = self._stack_session.get_current_session()
         if current_session is None:
             return None, None, None
-        if (self._starting_sid + len(self._sessions_by_order)) <= current_sid or self._starting_sid > current_sid:
+        if (self._starting_sid + len(self._sessions_by_order)) <= current_global_sid or \
+                self._starting_sid > current_global_sid:
             return None, None, None
-        relative_sid = current_sid - self._starting_sid
+        relative_sid = current_global_sid - self._starting_sid
         return relative_sid, self._sessions_by_order[relative_sid][self.NAME_KEY], current_session
