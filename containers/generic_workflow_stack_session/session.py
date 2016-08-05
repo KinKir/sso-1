@@ -91,12 +91,10 @@ class GenericWorkflowStackSession(object):
             raise CannotEnterSession()
 
         recorded_args = {}
-        _, current_session_name, current_session = self._get_current_session()
-        if current_session is not None:
-            for arg_key in self._sessions_by_key[current_session_name][self.ALLOWED_ARGS_KEY]:
-                if arg_key not in args:
-                    raise ArgKeyNotPresent(arg_key)
-                recorded_args[arg_key] = args[arg_key]
+        for key in self._sessions_by_key[session_name][self.ALLOWED_ARGS_KEY]:
+            if key not in args:
+                raise ArgKeyNotPresent(key)
+            recorded_args[key] = args[key]
 
         _, _, next_session = self._stack_session.push_session()
 
