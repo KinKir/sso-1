@@ -2,7 +2,7 @@ from exceptions import NoWorkFlowSessionEntered
 from exceptions import InvalidWorkflowTemplate
 from exceptions import ReturnArgKeyNotPresent
 from exceptions import ArgKeyNotPresent
-from exceptions import StorageKeyNotPresent
+from exceptions import StorageKeyNotAllowed
 from exceptions import CannotEnterSession
 
 
@@ -74,7 +74,7 @@ class GenericWorkflowStackSession(object):
         if session is None:
             raise NoWorkFlowSessionEntered()
         if key not in self._sessions_by_key[session_name][self.ALLOWED_STORAGE_KEY]:
-            raise StorageKeyNotPresent(key)
+            raise StorageKeyNotAllowed(key)
         session[key] = val
 
     def get_current_session_args(self):
