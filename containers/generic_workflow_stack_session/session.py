@@ -38,7 +38,7 @@ class GenericWorkflowStackSession(object):
 
             if not isinstance(session[self.NAME_KEY], str):
                 return False
-            if not isinstance(session[self.ALLOWED_ARGS_KEY], str):
+            if not isinstance(session[self.ALLOWED_ARGS_KEY], list):
                 return False
             if not isinstance(session[self.ALLOWED_RETURN_VALUES_KEY], list):
                 return False
@@ -98,8 +98,9 @@ class GenericWorkflowStackSession(object):
                     raise ArgKeyNotPresent(arg_key)
                 recorded_args[arg_key] = args[arg_key]
 
-        _, next_session = self._stack_session.push_session()
+        _, _, next_session = self._stack_session.push_session()
 
+        _, current_session_name, _ = self._get_current_session()
         for key in self._sessions_by_key[current_session_name][self.ALLOWED_ARGS_KEY]:
             next_session[key] = recorded_args[key]
 
@@ -134,7 +135,7 @@ class GenericWorkflowStackSession(object):
         if current_session is None:
             global_sid, _ = self._stack_session.get_current_session()
             if global_sid != self._starting_sid - 1 or \
-                    self._sessions_by_key.get(session_name)[self.RELATIVE_SID_KEY] != self._starting_sid:
+                    self._sessions_by_key.get(session_name)[self.RELATIVE_SID_KEY] != 0:
                 return False
         elif self._sessions_by_key.get(session_name)[self.RELATIVE_SID_KEY] != current_relative_sid + 1:
             return False
