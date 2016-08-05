@@ -109,20 +109,17 @@ class GenericWorkflowStackSession(object):
         if current_session is None:
             raise NoWorkFlowSessionEntered()
 
-        if current_relative_sid == self._starting_sid:
-            self._stack_session.pop_session()
-            return None
-
         for ret_val_key in self._sessions_by_key[current_session_name][self.ALLOWED_RETURN_VALUES_KEY]:
-            if ret_val_key not in current_session:
-                return ReturnArgKeyNotPresent(ret_val_key)
+            if ret_val_key not in return_values:
+                raise ReturnArgKeyNotPresent(ret_val_key)
             recorded_return_val[ret_val_key] = return_values[ret_val_key]
 
         self._stack_session.pop_session()
-        _, _, previous_session = self._get_current_session()
+        _, previous_global_session = self._stack_session.get_current_session()
 
-        for key in self._sessions_by_key[current_session_name][self.ALLOWED_RETURN_VALUES_KEY]:
-            previous_session[key] = recorded_return_val[key]
+        if previous_global_session is not None:
+            for key in self._sessions_by_key[current_session_name][self.ALLOWED_RETURN_VALUES_KEY]:
+                previous_global_session[key] = recorded_return_val[key]
         return recorded_return_val
 
     def _is_entering_allowed(self, session_name):
