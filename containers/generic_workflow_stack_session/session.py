@@ -48,11 +48,11 @@ class GenericWorkflowStackSession(object):
             if not isinstance(session[self.ALLOWED_STORAGE_KEY], list):
                 return False
 
-            if self.ERROR_RETURN_VALUE_KEY in self.ALLOWED_ARGS_KEY:
+            if self.ERROR_RETURN_VALUE_KEY in session[self.ALLOWED_ARGS_KEY]:
                 return False
-            if self.ERROR_RETURN_VALUE_KEY in self.ALLOWED_RETURN_VALUES_KEY:
+            if self.ERROR_RETURN_VALUE_KEY in session[self.ALLOWED_RETURN_VALUES_KEY]:
                 return False
-            if self.ERROR_RETURN_VALUE_KEY in self.ALLOWED_STORAGE_KEY:
+            if self.ERROR_RETURN_VALUE_KEY in session[self.ALLOWED_STORAGE_KEY]:
                 return False
 
         return True
