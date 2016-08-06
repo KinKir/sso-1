@@ -1,0 +1,2 @@
+class UnableToSerializeData(Exception):
+    pass

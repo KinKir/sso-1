@@ -1,4 +1,12 @@
+import ujson
+import uuid
+
 from containers.generic_session.session import GenericSession
+from exceptions import UnableToSerializeData
+
+from containers.generic_session.coder import Coder
+from containers.generic_session.cryptor import Cryptor
+from containers.generic_session.packer import Packer
 
 
 class GenericStackSession(GenericSession):
@@ -9,12 +17,23 @@ class GenericStackSession(GenericSession):
 
     ID_KEY = 'i'
 
-    def __init__(self, stack_id):
-        super(GenericStackSession, self).__init__()
-        self[self.STORAGE_KEY] = {}
-        self[self.ARCHIVE_KEY] = {}
-        self[self.ID_KEY] = stack_id
-        self._next_sid = 0
+    def __init__(self, stack_id, dictionary=None):
+        if dict is None:
+            super(GenericStackSession, self).__init__({})
+            self[self.STORAGE_KEY] = {}
+            self[self.ARCHIVE_KEY] = {}
+            self[self.ID_KEY] = stack_id
+            self._next_sid = 0
+        else:
+            super(GenericStackSession, self).__init__(dictionary)
+            if self._next_sid is None:
+                raise UnableToSerializeData()
+            if self.get(self.STORAGE_KEY) is None:
+                raise UnableToSerializeData()
+            if self.get(self.ARCHIVE_KEY) is None:
+                raise UnableToSerializeData()
+            if self.get(self.ID_KEY) is None:
+                raise UnableToSerializeData()
 
     def push_session(self):
         current_sid = self._next_sid
@@ -51,3 +70,31 @@ class GenericStackSession(GenericSession):
 
     def get_archived_sessions(self):
         return self[self.ARCHIVE_KEY]
+
+    @classmethod
+    def _tobin(cls, session):
+        return ujson.dumps(session).encode(encoding='utf-8', errors='strict')
+
+    @classmethod
+    def _parse(cls, plaintext):
+        return cls(None, ujson.loads(plaintext.decode(encoding='utf-8', errors='strict')))
+
+    @classmethod
+    def deserialize(cls, s, key_retrieval_func):
+        binary_data = Coder.decode(s)
+        iv, tag, keyid_bytes, aad, ciphertext, _ = Packer.unpack(binary_data)
+        keyid = uuid.UUID(bytes=keyid_bytes)
+        key = key_retrieval_func(keyid)
+        plaintext = Cryptor.decrypt(key, aad, iv, ciphertext, tag)
+        return keyid, cls._parse(plaintext)
+
+    @classmethod
+    def serialize(cls, session, keyid, key_retrieval_func):
+        if not isinstance(session, cls):
+            # TODO: Raise an error
+            pass
+        key = key_retrieval_func(keyid)
+        plaintext = cls._tobin(session)
+        iv, ciphertext, tag = Cryptor.encrypt(key, plaintext, None)
+        packed = Packer.pack(iv, ciphertext, tag, None, keyid.bytes)
+        return Coder.encode(packed)

@@ -27,8 +27,11 @@ class GenericSession(MutableMapping):
     def __delitem__(self, key):
         return self._dict.__delitem__(key)
 
-    def __init__(self):
-        self._dict = {}
+    def __init__(self, dictionary):
+        if dictionary is None:
+            self._dict = {}
+        else:
+            self._dict = dictionary
 
     @classmethod
     def _tobin(cls, session):
@@ -36,7 +39,7 @@ class GenericSession(MutableMapping):
 
     @classmethod
     def _parse(cls, plaintext):
-        return ujson.loads(plaintext.decode(encoding='utf-8', errors='strict'))
+        return cls(ujson.loads(plaintext.decode(encoding='utf-8', errors='strict')))
 
     @classmethod
     def deserialize(cls, s, key_retrieval_func):
