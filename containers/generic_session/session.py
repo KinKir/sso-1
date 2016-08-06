@@ -33,9 +33,13 @@ class GenericSession(MutableMapping):
         else:
             self._dict = dictionary
 
+    @property
+    def __dict__(self):
+        return self._dict
+
     @classmethod
     def _tobin(cls, session):
-        return ujson.dumps(session).encode(encoding='utf-8', errors='strict')
+        return ujson.dumps(session.__dict__).encode(encoding='utf-8', errors='strict')
 
     @classmethod
     def _parse(cls, plaintext):

@@ -17,16 +17,18 @@ class GenericStackSession(GenericSession):
 
     ID_KEY = 'i'
 
+    NEXT_SID_KEY = 'n'
+
     def __init__(self, stack_id, dictionary=None):
-        if dict is None:
+        if dictionary is None:
             super(GenericStackSession, self).__init__({})
             self[self.STORAGE_KEY] = {}
             self[self.ARCHIVE_KEY] = {}
             self[self.ID_KEY] = stack_id
-            self._next_sid = 0
+            self[self.NEXT_SID_KEY] = 0
         else:
             super(GenericStackSession, self).__init__(dictionary)
-            if self._next_sid is None:
+            if self.get(self.NEXT_SID_KEY) is None:
                 raise UnableToSerializeData()
             if self.get(self.STORAGE_KEY) is None:
                 raise UnableToSerializeData()
@@ -36,44 +38,44 @@ class GenericStackSession(GenericSession):
                 raise UnableToSerializeData()
 
     def push_session(self):
-        current_sid = self._next_sid
-        self[self.STORAGE_KEY][current_sid] = {}
-        self._next_sid += 1
-        return self._next_sid, current_sid, self[self.STORAGE_KEY][current_sid]
+        current_sid = self[self.NEXT_SID_KEY]
+        self[self.STORAGE_KEY][str(current_sid)] = {}
+        self[self.NEXT_SID_KEY] += 1
+        return self[self.NEXT_SID_KEY], current_sid, self[self.STORAGE_KEY][str(current_sid)]
 
     def pop_session(self):
-        if self._next_sid == 0:
+        if self[self.NEXT_SID_KEY] == 0:
             raise OverflowError
 
-        current_sid = self._next_sid - 1
-        self[self.ARCHIVE_KEY][current_sid] = self[self.STORAGE_KEY][current_sid]
+        current_sid = self[self.NEXT_SID_KEY] - 1
+        self[self.ARCHIVE_KEY][str(current_sid)] = self[self.STORAGE_KEY][str(current_sid)]
 
-        del self[self.STORAGE_KEY][current_sid]
-        self._next_sid -= 1
-        return self._next_sid
+        del self[self.STORAGE_KEY][str(current_sid)]
+        self[self.NEXT_SID_KEY] -= 1
+        return self[self.NEXT_SID_KEY]
 
     def get_current_session(self):
-        current_sid = self._next_sid - 1
+        current_sid = self[self.NEXT_SID_KEY] - 1
         if current_sid == -1:
             return -1, None
-        return current_sid, self[self.STORAGE_KEY][current_sid]
+        return current_sid, self[self.STORAGE_KEY][str(current_sid)]
 
     def store_in_current_session(self, key, value):
         _, current_session = self.get_current_session()
         current_session[key] = value
 
     def get_session(self, sid):
-        return self[self.STORAGE_KEY].get(sid)
+        return self[self.STORAGE_KEY].get(str(sid))
 
     def get_max_sid_issued(self):
-        return self._next_sid - 1
+        return self[self.NEXT_SID_KEY] - 1
 
     def get_archived_sessions(self):
         return self[self.ARCHIVE_KEY]
 
     @classmethod
     def _tobin(cls, session):
-        return ujson.dumps(session).encode(encoding='utf-8', errors='strict')
+        return ujson.dumps(session.__dict__).encode(encoding='utf-8', errors='strict')
 
     @classmethod
     def _parse(cls, plaintext):
