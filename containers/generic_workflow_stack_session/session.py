@@ -4,6 +4,7 @@ from exceptions import ReturnArgKeyNotPresent
 from exceptions import ArgKeyNotPresent
 from exceptions import StorageKeyNotAllowed
 from exceptions import CannotEnterSession
+from exceptions import InvalidArguments
 
 
 class GenericWorkflowStackSession(object):
@@ -17,6 +18,8 @@ class GenericWorkflowStackSession(object):
     ALLOWED_RETURN_VALUES_KEY = 'allowed_ret_values_keys'
 
     RELATIVE_SID_KEY = 'relative_sid'
+
+    ERROR_RETURN_VALUE_KEY = 'r_e'
 
     def __init__(self, starting_sid, stack_session_instance, workflow_template):
         self._stack_session = stack_session_instance
@@ -43,6 +46,13 @@ class GenericWorkflowStackSession(object):
             if not isinstance(session[self.ALLOWED_RETURN_VALUES_KEY], list):
                 return False
             if not isinstance(session[self.ALLOWED_STORAGE_KEY], list):
+                return False
+
+            if self.ERROR_RETURN_VALUE_KEY in self.ALLOWED_ARGS_KEY:
+                return False
+            if self.ERROR_RETURN_VALUE_KEY in self.ALLOWED_RETURN_VALUES_KEY:
+                return False
+            if self.ERROR_RETURN_VALUE_KEY in self.ALLOWED_STORAGE_KEY:
                 return False
 
         return True
@@ -86,6 +96,19 @@ class GenericWorkflowStackSession(object):
             recorded_args[arg_key] = session[arg_key]
         return recorded_args
 
+    def get_previous_session_return_value(self):
+        _, session_name, session = self._get_current_session()
+        if session is None:
+            raise NoWorkFlowSessionEntered()
+        return session.get(self.ERROR_RETURN_VALUE_KEY)
+
+    def clear_previous_session_return_value(self):
+        _, session_name, session = self._get_current_session()
+        if session is None:
+            raise NoWorkFlowSessionEntered()
+        if self.ERROR_RETURN_VALUE_KEY in session:
+            del session[self.ERROR_RETURN_VALUE_KEY]
+
     def enter_session(self, session_name, args):
         if not self._is_entering_allowed(session_name):
             raise CannotEnterSession()
@@ -99,26 +122,32 @@ class GenericWorkflowStackSession(object):
         _, _, next_session = self._stack_session.push_session()
 
         _, current_session_name, _ = self._get_current_session()
-        for key in self._sessions_by_key[current_session_name][self.ALLOWED_ARGS_KEY]:
+        for key in recorded_args:
             next_session[key] = recorded_args[key]
 
-    def exit_session(self, return_values):
+    def exit_session(self, return_values, is_error=False, error=None):
         recorded_return_val = {}
+
+        if is_error and error is None:
+            raise InvalidArguments('is_error is true, but no error object passed')
 
         current_relative_sid, current_session_name, current_session = self._get_current_session()
         if current_session is None:
             raise NoWorkFlowSessionEntered()
 
-        for ret_val_key in self._sessions_by_key[current_session_name][self.ALLOWED_RETURN_VALUES_KEY]:
-            if ret_val_key not in return_values:
-                raise ReturnArgKeyNotPresent(ret_val_key)
-            recorded_return_val[ret_val_key] = return_values[ret_val_key]
+        if is_error:
+            recorded_return_val[self.ERROR_RETURN_VALUE_KEY] = error
+        else:
+            for ret_val_key in self._sessions_by_key[current_session_name][self.ALLOWED_RETURN_VALUES_KEY]:
+                if ret_val_key not in return_values:
+                    raise ReturnArgKeyNotPresent(ret_val_key)
+                recorded_return_val[ret_val_key] = return_values[ret_val_key]
 
         self._stack_session.pop_session()
         _, previous_global_session = self._stack_session.get_current_session()
 
         if previous_global_session is not None:
-            for key in self._sessions_by_key[current_session_name][self.ALLOWED_RETURN_VALUES_KEY]:
+            for key in recorded_return_val:
                 previous_global_session[key] = recorded_return_val[key]
         return recorded_return_val
 
