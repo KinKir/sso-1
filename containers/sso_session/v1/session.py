@@ -5,6 +5,7 @@ from containers.generic_session.packer import GenericSessionPacker as Packer
 
 from containers.generic_session.coder import GenericSessionCoder as Coder
 from containers.sso_session.common import SSOSessionInterface
+from exceptions import UnableToSerialize
 
 
 class SSOSession(SSOSessionInterface):
@@ -139,8 +140,8 @@ class SSOSession(SSOSessionInterface):
     @classmethod
     def serialize(cls, obj, keyid, key_retrieval_func):
         if not isinstance(obj, cls):
-            # TODO: Raise an error
-            pass
+            raise UnableToSerialize('%s is not an instance of %s' % (obj, cls))
+
         key = key_retrieval_func(keyid)
         plaintext = cls._tobin(obj)
         iv, ciphertext, tag = Cryptor.encrypt(key, plaintext, None)

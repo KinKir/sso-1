@@ -2,14 +2,14 @@ import ujson
 import uuid
 from collections import MutableMapping
 
-from containers.generic_token.coder import GenericTokenCoder as Coder
-from containers.generic_token.packer import GenericTokenPacker as Packer
+from containers.generic_session.cryptor import GenericSessionCryptor as Cryptor
+from containers.generic_session.packer import GenericSessionPacker as Packer
 
-from containers.generic_token.cryptor import GenericTokenCryptor as Cryptor
+from containers.generic_session.coder import GenericSessionCoder as Coder
+from exceptions import UnableToSerialize
 
 
 class GenericToken(MutableMapping):
-
     def __len__(self):
         return self._dict.__len__()
 
@@ -27,16 +27,23 @@ class GenericToken(MutableMapping):
     def __delitem__(self, key):
         return self._dict.__delitem__(key)
 
-    def __init__(self):
-        self._dict = {}
+    def __init__(self, dictionary):
+        if dictionary is None:
+            self._dict = {}
+        else:
+            self._dict = dictionary
+
+    @property
+    def __dict__(self):
+        return self._dict
 
     @classmethod
-    def _tobin(cls, session):
-        return ujson.dumps(session).encode(encoding='utf-8', errors='strict')
+    def _tobin(cls, token):
+        return ujson.dumps(token.__dict__).encode(encoding='utf-8', errors='strict')
 
     @classmethod
     def _parse(cls, plaintext):
-        return ujson.loads(plaintext.decode(encoding='utf-8', errors='strict'))
+        return cls(ujson.loads(plaintext.decode(encoding='utf-8', errors='strict')))
 
     @classmethod
     def deserialize(cls, s, key_retrieval_func):
@@ -48,12 +55,12 @@ class GenericToken(MutableMapping):
         return keyid, cls._parse(plaintext)
 
     @classmethod
-    def serialize(cls, session, keyid, key_retrieval_func):
-        if not isinstance(session, cls):
-            # TODO: Raise an error
-            pass
+    def serialize(cls, token, keyid, key_retrieval_func):
+        if not isinstance(token, cls):
+            raise UnableToSerialize('%s is not an instance of %s' % (token, cls))
+
         key = key_retrieval_func(keyid)
-        plaintext = cls._tobin(session)
+        plaintext = cls._tobin(token)
         iv, ciphertext, tag = Cryptor.encrypt(key, plaintext, None)
         packed = Packer.pack(iv, ciphertext, tag, None, keyid.bytes)
         return Coder.encode(packed)

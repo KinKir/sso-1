@@ -5,6 +5,7 @@ from containers.generic_token.packer import GenericTokenPacker as Packer
 
 from containers.generic_token.cryptor import GenericTokenCryptor as Cryptor
 from containers.oauth_2_token.common import OAuth2TokenInterface
+from exceptions import UnableToSerialize
 
 
 class OAuth2Token(OAuth2TokenInterface):
@@ -146,8 +147,8 @@ class OAuth2Token(OAuth2TokenInterface):
     @classmethod
     def serialize(cls, token, keyid, key_retrieval_func):
         if not isinstance(token, cls):
-            # TODO: Raise an error
-            pass
+            raise UnableToSerialize('%s is not an instance of %s' % (token, cls))
+
         key = key_retrieval_func(keyid)
         plaintext = cls._tobin(token)
         iv, ciphertext, tag = Cryptor.encrypt(key, plaintext, None)

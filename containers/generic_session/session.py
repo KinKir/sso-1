@@ -6,6 +6,7 @@ from containers.generic_session.cryptor import GenericSessionCryptor as Cryptor
 from containers.generic_session.packer import GenericSessionPacker as Packer
 
 from containers.generic_session.coder import GenericSessionCoder as Coder
+from exceptions import UnableToSerialize
 
 
 class GenericSession(MutableMapping):
@@ -20,7 +21,7 @@ class GenericSession(MutableMapping):
         return self._dict.__iter__()
 
     def __setitem__(self, key, value):
-        if not isinstance(key, str) and not isinstance(key, int):
+        if not isinstance(key, str):
             raise NotImplementedError
         return self._dict.__setitem__(key, value)
 
@@ -57,8 +58,8 @@ class GenericSession(MutableMapping):
     @classmethod
     def serialize(cls, session, keyid, key_retrieval_func):
         if not isinstance(session, cls):
-            # TODO: Raise an error
-            pass
+            raise UnableToSerialize('%s is not an instance of %s' % (session, cls))
+
         key = key_retrieval_func(keyid)
         plaintext = cls._tobin(session)
         iv, ciphertext, tag = Cryptor.encrypt(key, plaintext, None)

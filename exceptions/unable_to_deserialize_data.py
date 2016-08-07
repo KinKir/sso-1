@@ -1,2 +1,0 @@
-class UnableToDeserializeData(Exception):
-    pass

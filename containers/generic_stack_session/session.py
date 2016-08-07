@@ -2,7 +2,8 @@ import ujson
 import uuid
 
 from containers.generic_session.session import GenericSession
-from exceptions import UnableToDeserializeData
+from exceptions import UnableToDeserialize
+from exceptions import UnableToSerialize
 
 from containers.generic_session.coder import Coder
 from containers.generic_session.cryptor import Cryptor
@@ -29,13 +30,13 @@ class GenericStackSession(GenericSession):
         else:
             super(GenericStackSession, self).__init__(dictionary)
             if self.get(self.NEXT_SID_KEY) is None:
-                raise UnableToDeserializeData()
+                raise UnableToDeserialize()
             if self.get(self.STORAGE_KEY) is None:
-                raise UnableToDeserializeData()
+                raise UnableToDeserialize()
             if self.get(self.ARCHIVE_KEY) is None:
-                raise UnableToDeserializeData()
+                raise UnableToDeserialize()
             if self.get(self.ID_KEY) is None:
-                raise UnableToDeserializeData()
+                raise UnableToDeserialize()
 
     def push_session(self):
         current_sid = self[self.NEXT_SID_KEY]
@@ -93,8 +94,8 @@ class GenericStackSession(GenericSession):
     @classmethod
     def serialize(cls, session, keyid, key_retrieval_func):
         if not isinstance(session, cls):
-            # TODO: Raise an error
-            pass
+            raise UnableToSerialize('%s is not an instance of %s' % (session, cls))
+
         key = key_retrieval_func(keyid)
         plaintext = cls._tobin(session)
         iv, ciphertext, tag = Cryptor.encrypt(key, plaintext, None)
