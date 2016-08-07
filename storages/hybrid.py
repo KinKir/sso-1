@@ -4,11 +4,13 @@ import uuid
 
 class HybridStorage(object):
 
-    _IS_PART_IN_REDIS = 1
-
     _DEFAULT_TIME_DELTA = 10*24*60*60
 
     _UUID_HEX_LENGTH = 32
+
+    _HMAC_LENGTH = 64
+
+    _META_DATA_LENGTH = 1
 
     _PARTIAL_COOKIE = 'r'
 
@@ -40,15 +42,18 @@ class HybridStorage(object):
         storage_id = uuid.UUID(hex=cookie_part[len(metadata):self._UUID_HEX_LENGTH+len(metadata)])
         self._redis_client.delete(storage_id)
 
+    def _attach_cookie_hmac(self, cookie_part):
+        pass
+
     def store(self, response, storage_id, data, purge_old_data=True):
         metadata = self._WHOLE_COOKIE
 
-        if len(data) <= (self._max_cookie_limit - 1):
+        if len(data) <= (self._max_cookie_limit - self._META_DATA_LENGTH - self._HMAC_LENGTH):
             response.set_cookie(self._cookie_name, metadata + data,
                                 expires=time.time() + self._time_delta)
 
-            if purge_old_data:
-                self._redis_client.delete(storage_id)
+            if purge_old_data and storage_id is not None:
+                self._redis_client.delete(storage_id.hex)
 
             return metadata + data
 
@@ -57,34 +62,52 @@ class HybridStorage(object):
             storage_id = uuid.uuid4()
 
         whole_data = metadata + storage_id.hex + data
-        cookie_part = whole_data[0:self._max_cookie_limit]
-        redis_part = whole_data[self._max_cookie_limit:len(whole_data)]
+        cookie_part = whole_data[0:(self._max_cookie_limit - self._HMAC_LENGTH)]
+        cookie_part_with_hmac = self._attach_cookie_hmac(cookie_part)
+        redis_part = whole_data[(self._max_cookie_limit - self._HMAC_LENGTH):len(whole_data)]
 
-        response.set_cookie(self._cookie_name, cookie_part, expires=time.time() + self._time_delta)
+        response.set_cookie(self._cookie_name, cookie_part_with_hmac, expires=time.time() + self._time_delta)
         self._redis_client.set(storage_id.hex, redis_part, self._time_delta)
         return whole_data
 
+    def _detach_cookie_hmac(self, cookie_part):
+        pass
+
+    def _verify_cookie_hmac(self, hmac, cookie_part):
+        pass
+
     def retrieve(self, request):
-        cookie_part = request.cookies.get(self._cookie_name)
-        if cookie_part is None:
-            return None
+        cookie_part_with_hmac = request.cookies.get(self._cookie_name)
+        if cookie_part_with_hmac is None:
+            return None, None
+
+        hmac, cookie_part = self._detach_cookie_hmac(cookie_part_with_hmac)
+        if hmac is None:
+            return None, None
+
+        if not self._verify_cookie_hmac(hmac, cookie_part):
+            return None, None
 
         metadata = cookie_part[0]
         if metadata != self._PARTIAL_COOKIE and metadata != self._WHOLE_COOKIE:
-            return None
+            return None, None
 
         if metadata == self._WHOLE_COOKIE:
-            return cookie_part[1:]
+            return None, cookie_part[1:]
 
         if len(cookie_part) < (len(metadata) + self._UUID_HEX_LENGTH):
-            return None
+            return None, None
 
         storage_id = uuid.UUID(hex=cookie_part[len(metadata):self._UUID_HEX_LENGTH+len(metadata)])
 
-        redis_part = self._redis_client.get(storage_id).decode(encoding='utf-8', errors='strict')
-        if redis_part is None:
-            return None
+        redis_part_binary = self._redis_client.get(storage_id.hex)
+        if redis_part_binary is None:
+            return None, None
 
-        self._redis_client.expire(storage_id, self._time_delta)
+        redis_part = redis_part_binary.decode(encoding='utf-8', errors='strict')
+        if redis_part is None:
+            return None, None
+
+        self._redis_client.expire(storage_id.hex, self._time_delta)
 
         return storage_id, cookie_part[(len(metadata)+self._UUID_HEX_LENGTH):len(cookie_part)] + redis_part
