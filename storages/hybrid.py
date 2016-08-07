@@ -16,11 +16,12 @@ class HybridStorage(object):
 
     _WHOLE_COOKIE = 'c'
 
-    def __init__(self, strict_redis_client, cookie_name, max_cookie_limit=4000, time_delta=_DEFAULT_TIME_DELTA):
+    def __init__(self, strict_redis_client, cookie_name, hmac_secret_key, max_cookie_limit=4000, time_delta=_DEFAULT_TIME_DELTA):
         self._redis_client = strict_redis_client
         self._cookie_name = cookie_name
         self._max_cookie_limit = max_cookie_limit
         self._time_delta = time_delta
+        self._hmac_secret_key = hmac_secret_key
 
     def delete(self, request, response):
         cookie_part = request.cookies.get(self._cookie_name)
@@ -64,7 +65,7 @@ class HybridStorage(object):
         whole_data = metadata + storage_id.hex + data
         cookie_part = whole_data[0:(self._max_cookie_limit - self._HMAC_LENGTH)]
         cookie_part_with_hmac = self._attach_cookie_hmac(cookie_part)
-        redis_part = whole_data[(self._max_cookie_limit - self._HMAC_LENGTH):len(whole_data)]
+        redis_part = whole_data[self._max_cookie_limit:len(whole_data)]
 
         response.set_cookie(self._cookie_name, cookie_part_with_hmac, expires=time.time() + self._time_delta)
         self._redis_client.set(storage_id.hex, redis_part, self._time_delta)
