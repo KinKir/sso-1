@@ -1,6 +1,10 @@
 import time
 import uuid
 
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes, hmac
+from cryptography.exceptions import InvalidSignature
+
 
 class HybridStorage(object):
 
@@ -16,7 +20,8 @@ class HybridStorage(object):
 
     _WHOLE_COOKIE = 'c'
 
-    def __init__(self, strict_redis_client, cookie_name, hmac_secret_key, max_cookie_limit=4000, time_delta=_DEFAULT_TIME_DELTA):
+    def __init__(self, strict_redis_client, cookie_name, hmac_secret_key, max_cookie_limit=4000,
+                 time_delta=_DEFAULT_TIME_DELTA):
         self._redis_client = strict_redis_client
         self._cookie_name = cookie_name
         self._max_cookie_limit = max_cookie_limit
@@ -44,13 +49,17 @@ class HybridStorage(object):
         self._redis_client.delete(storage_id)
 
     def _attach_cookie_hmac(self, cookie_part):
-        pass
+        h = hmac.HMAC(self._hmac_secret_key, hashes.SHA256(), backend=default_backend())
+        h.update(cookie_part.encode(encoding='utf_8', errors='strict'))
+        mac_hex = h.finalize().hex()
+        return mac_hex+cookie_part
 
     def store(self, response, storage_id, data, purge_old_data=True):
         metadata = self._WHOLE_COOKIE
 
         if len(data) <= (self._max_cookie_limit - self._META_DATA_LENGTH - self._HMAC_LENGTH):
-            response.set_cookie(self._cookie_name, metadata + data,
+            cookie_part_with_hmac = self._attach_cookie_hmac(metadata + data)
+            response.set_cookie(self._cookie_name, cookie_part_with_hmac,
                                 expires=time.time() + self._time_delta)
 
             if purge_old_data and storage_id is not None:
@@ -65,28 +74,38 @@ class HybridStorage(object):
         whole_data = metadata + storage_id.hex + data
         cookie_part = whole_data[0:(self._max_cookie_limit - self._HMAC_LENGTH)]
         cookie_part_with_hmac = self._attach_cookie_hmac(cookie_part)
-        redis_part = whole_data[self._max_cookie_limit:len(whole_data)]
+        redis_part = whole_data[(self._max_cookie_limit - self._HMAC_LENGTH):len(whole_data)]
 
         response.set_cookie(self._cookie_name, cookie_part_with_hmac, expires=time.time() + self._time_delta)
         self._redis_client.set(storage_id.hex, redis_part, self._time_delta)
         return whole_data
 
-    def _detach_cookie_hmac(self, cookie_part):
-        pass
+    def _detach_cookie_hmac(self, cookie_part_with_hmac):
+        if len(cookie_part_with_hmac) <= self._HMAC_LENGTH:
+            return None, None
+        mac_hex = cookie_part_with_hmac[0:self._HMAC_LENGTH]
+        cookie_part = cookie_part_with_hmac[self._HMAC_LENGTH:len(cookie_part_with_hmac)]
+        return mac_hex, cookie_part
 
-    def _verify_cookie_hmac(self, hmac, cookie_part):
-        pass
+    def _verify_cookie_hmac(self, mac_hex, cookie_part):
+        h = hmac.HMAC(self._hmac_secret_key, hashes.SHA256(), backend=default_backend())
+        h.update(cookie_part.encode(encoding='utf_8', errors='strict'))
+        try:
+            h.verify(bytes.fromhex(mac_hex))
+            return True
+        except InvalidSignature:
+            return False
 
     def retrieve(self, request):
         cookie_part_with_hmac = request.cookies.get(self._cookie_name)
         if cookie_part_with_hmac is None:
             return None, None
 
-        hmac, cookie_part = self._detach_cookie_hmac(cookie_part_with_hmac)
-        if hmac is None:
+        mac, cookie_part = self._detach_cookie_hmac(cookie_part_with_hmac)
+        if mac is None:
             return None, None
 
-        if not self._verify_cookie_hmac(hmac, cookie_part):
+        if not self._verify_cookie_hmac(mac, cookie_part):
             return None, None
 
         metadata = cookie_part[0]
