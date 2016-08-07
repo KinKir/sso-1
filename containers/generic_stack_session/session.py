@@ -2,7 +2,7 @@ import ujson
 import uuid
 
 from containers.generic_session.session import GenericSession
-from exceptions import UnableToSerializeData
+from exceptions import UnableToDeserializeData
 
 from containers.generic_session.coder import Coder
 from containers.generic_session.cryptor import Cryptor
@@ -29,13 +29,13 @@ class GenericStackSession(GenericSession):
         else:
             super(GenericStackSession, self).__init__(dictionary)
             if self.get(self.NEXT_SID_KEY) is None:
-                raise UnableToSerializeData()
+                raise UnableToDeserializeData()
             if self.get(self.STORAGE_KEY) is None:
-                raise UnableToSerializeData()
+                raise UnableToDeserializeData()
             if self.get(self.ARCHIVE_KEY) is None:
-                raise UnableToSerializeData()
+                raise UnableToDeserializeData()
             if self.get(self.ID_KEY) is None:
-                raise UnableToSerializeData()
+                raise UnableToDeserializeData()
 
     def push_session(self):
         current_sid = self[self.NEXT_SID_KEY]
