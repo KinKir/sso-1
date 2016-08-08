@@ -16,7 +16,7 @@ class GenericStackSession(GenericSession):
 
     ARCHIVE_KEY = 'e'
 
-    ID_KEY = 'i'
+    STACK_ID_KEY = 'i'
 
     NEXT_SID_KEY = 'n'
 
@@ -25,7 +25,7 @@ class GenericStackSession(GenericSession):
             super(GenericStackSession, self).__init__({})
             self[self.STORAGE_KEY] = {}
             self[self.ARCHIVE_KEY] = {}
-            self[self.ID_KEY] = stack_id
+            self[self.STACK_ID_KEY] = stack_id
             self[self.NEXT_SID_KEY] = 0
         else:
             super(GenericStackSession, self).__init__(dictionary)
@@ -35,7 +35,7 @@ class GenericStackSession(GenericSession):
                 raise UnableToDeserialize()
             if self.get(self.ARCHIVE_KEY) is None:
                 raise UnableToDeserialize()
-            if self.get(self.ID_KEY) is None:
+            if self.get(self.STACK_ID_KEY) is None:
                 raise UnableToDeserialize()
 
     def push_session(self):
@@ -73,6 +73,10 @@ class GenericStackSession(GenericSession):
 
     def get_archived_sessions(self):
         return self[self.ARCHIVE_KEY]
+
+    @property
+    def stack_id(self):
+        return self[self.STACK_ID_KEY]
 
     @classmethod
     def _tobin(cls, session):
