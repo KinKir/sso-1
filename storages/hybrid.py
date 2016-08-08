@@ -5,6 +5,8 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, hmac
 from cryptography.exceptions import InvalidSignature
 
+from exceptions import InvalidArguments
+
 
 class HybridStorage(object):
 
@@ -22,6 +24,14 @@ class HybridStorage(object):
 
     def __init__(self, strict_redis_client, cookie_name, hmac_secret_key, max_cookie_limit=4000,
                  time_delta=_DEFAULT_TIME_DELTA):
+
+        if max_cookie_limit <= self._META_DATA_LENGTH + self._UUID_HEX_LENGTH + self._HMAC_LENGTH:
+            raise InvalidArguments('Max cookie limit should be greater than %d' %
+                                   (self._META_DATA_LENGTH + self._UUID_HEX_LENGTH + self._HMAC_LENGTH))
+
+        if hmac_secret_key is None:
+            raise InvalidArguments('HMAC secret key is required')
+
         self._redis_client = strict_redis_client
         self._cookie_name = cookie_name
         self._max_cookie_limit = max_cookie_limit
