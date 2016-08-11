@@ -4,6 +4,7 @@ import uuid
 from containers.generic_session.session import GenericSession
 from exceptions import UnableToDeserialize
 from exceptions import UnableToSerialize
+from exceptions import InvalidArguments
 
 from containers.generic_session.coder import Coder
 from containers.generic_session.cryptor import Cryptor
@@ -12,67 +13,126 @@ from containers.generic_session.packer import Packer
 
 class GenericStackSession(GenericSession):
 
-    STORAGE_KEY = 'd'
+    STACK_ARCHIVE_KEY = 'a'
 
-    ARCHIVE_KEY = 'e'
+    STACK_POSITION_KEY = 'p'
 
     STACK_ID_KEY = 'i'
 
-    NEXT_SID_KEY = 'n'
+    STACK_STORAGE_KEY = 's'
+
+    SESSION_ID_KEY = 'i'
+
+    SESSION_STORAGE_KEY = 's'
+
+    SESSION_ARGUMENTS_KEY = 'a'
 
     def __init__(self, stack_id, dictionary=None):
         if dictionary is None:
             super(GenericStackSession, self).__init__({})
-            self[self.STORAGE_KEY] = {}
-            self[self.ARCHIVE_KEY] = {}
+            self[self.STACK_ARCHIVE_KEY] = {}
+            self[self.STACK_STORAGE_KEY] = {}
             self[self.STACK_ID_KEY] = stack_id
-            self[self.NEXT_SID_KEY] = 0
+            self[self.STACK_POSITION_KEY] = -1
         else:
             super(GenericStackSession, self).__init__(dictionary)
-            if self.get(self.NEXT_SID_KEY) is None:
+            if self.get(self.STACK_ARCHIVE_KEY) is None:
                 raise UnableToDeserialize()
-            if self.get(self.STORAGE_KEY) is None:
-                raise UnableToDeserialize()
-            if self.get(self.ARCHIVE_KEY) is None:
+            if self.get(self.STACK_STORAGE_KEY) is None:
                 raise UnableToDeserialize()
             if self.get(self.STACK_ID_KEY) is None:
                 raise UnableToDeserialize()
+            if self.get(self.STACK_POSITION_KEY) is None:
+                raise UnableToDeserialize()
 
-    def push_session(self):
-        current_sid = self[self.NEXT_SID_KEY]
-        self[self.STORAGE_KEY][str(current_sid)] = {}
-        self[self.NEXT_SID_KEY] += 1
-        return self[self.NEXT_SID_KEY], current_sid, self[self.STORAGE_KEY][str(current_sid)]
+    def push_session(self, sid):
+        if sid is None:
+            raise InvalidArguments()
+        current_position = self[self.STACK_POSITION_KEY]
+        self[self.STACK_STORAGE_KEY][str(current_position + 1)] = {
+            self.SESSION_ARGUMENTS_KEY: {},
+            self.SESSION_ID_KEY: sid,
+            self.SESSION_STORAGE_KEY: {}
+        }
+        self[self.STACK_POSITION_KEY] += 1
+        return self[self.STACK_POSITION_KEY]
 
     def pop_session(self):
-        if self[self.NEXT_SID_KEY] == 0:
-            raise OverflowError
+        current_position = self[self.STACK_POSITION_KEY]
+        if current_position == -1:
+            raise OverflowError()
+        self[self.STACK_ARCHIVE_KEY][str(current_position)] = self[self.STACK_STORAGE_KEY][str(current_position)]
+        del self[self.STACK_STORAGE_KEY][str(current_position)]
+        self[self.STACK_POSITION_KEY] -= 1
+        return self.STACK_POSITION_KEY
 
-        current_sid = self[self.NEXT_SID_KEY] - 1
-        self[self.ARCHIVE_KEY][str(current_sid)] = self[self.STORAGE_KEY][str(current_sid)]
+    def _get_current_session(self):
+        current_position = self[self.STACK_POSITION_KEY]
+        if current_position == -1:
+            return None
+        return self[self.STACK_STORAGE_KEY][str(current_position)]
 
-        del self[self.STORAGE_KEY][str(current_sid)]
-        self[self.NEXT_SID_KEY] -= 1
-        return self[self.NEXT_SID_KEY]
+    def _get_archived_session(self, position):
+        archived_session = self[self.STACK_ARCHIVE_KEY].get(str(position))
+        return archived_session
 
-    def get_current_session(self):
-        current_sid = self[self.NEXT_SID_KEY] - 1
-        if current_sid == -1:
-            return -1, None
-        return current_sid, self[self.STORAGE_KEY][str(current_sid)]
+    def get_current_session_id(self):
+        current_session = self._get_current_session()
+        if current_session is None:
+            return None
+        return current_session[self.SESSION_ID_KEY]
+
+    def get_current_session_storage(self):
+        current_session = self._get_current_session()
+        if current_session is None:
+            return None
+
+        storage_container = {}
+        for key in current_session[self.SESSION_STORAGE_KEY]:
+            storage_container[key] = current_session[self.SESSION_STORAGE_KEY][key]
+        return storage_container
+
+    def get_current_session_arguments(self):
+        current_session = self._get_current_session()
+        if current_session is None:
+            return None
+
+        arg_container = {}
+        for key in current_session[self.SESSION_ARGUMENTS_KEY]:
+            arg_container[key] = current_session[self.SESSION_ARGUMENTS_KEY][key]
+        return arg_container
 
     def store_in_current_session(self, key, value):
-        _, current_session = self.get_current_session()
-        current_session[key] = value
+        session = self._get_current_session()
+        if session is None:
+            return None
+        session[self.SESSION_STORAGE_KEY][key] = value
 
-    def get_session(self, sid):
-        return self[self.STORAGE_KEY].get(str(sid))
+    def set_argument_for_current_session(self, key, value):
+        session = self._get_current_session()
+        if session is None:
+            return None
+        session[self.SESSION_ARGUMENTS_KEY][key] = value
 
-    def get_max_sid_issued(self):
-        return self[self.NEXT_SID_KEY] - 1
+    def get_archived_session_storage(self, position):
+        archived_session = self._get_archived_session(position)
+        if archived_session is None:
+            return None
 
-    def get_archived_sessions(self):
-        return self[self.ARCHIVE_KEY]
+        storage_container = {}
+        for key in archived_session[self.SESSION_STORAGE_KEY]:
+            storage_container[key] = archived_session[self.SESSION_STORAGE_KEY][key]
+        return storage_container
+
+    def get_archived_session_arguments(self, position):
+        archived_session = self._get_archived_session(position)
+        if archived_session is None:
+            return None
+
+        arg_container = {}
+        for key in archived_session[self.SESSION_ARGUMENTS_KEY]:
+            arg_container[key] = archived_session[self.SESSION_ARGUMENTS_KEY][key]
+        return arg_container
 
     @property
     def stack_id(self):
