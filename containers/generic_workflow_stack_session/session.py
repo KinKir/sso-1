@@ -6,172 +6,329 @@ from exceptions import StorageKeyNotAllowed
 from exceptions import CannotEnterSession
 from exceptions import InvalidArguments
 
+WORKFLOW_TEMPLATE = [
+    [{
+            'name': 'oauth2',
+            'allowed_argument_keys': [],
+            'allowed_return_value_keys': [],
+            'allowed_storage_keys': [],
+            'endpoints': [
+                {
+                    'name': 'auth',
+                    'restrictions': {
+                        'entry_point': True,
+                        'exit_point': False,
+                        'return_point': False,
+                        'call_point': True,
+                        'direct_access_allowed': True,
+                        'allowed_storage_keys': []
+                    }
+                },
+                {
+                    'name': 'submit',
+                    'restrictions': {
+                        'entry_point': False,
+                        'exit_point': True,
+                        'return_point': True,
+                        'call_point': False,
+                        'direct_access_allowed': False,
+                        'allowed_storage_keys': []
+                    }
+                }
+            ]
+        }],
+    [{
+            'name': 'sso',
+            'allowed_argument_keys': [],
+            'allowed_return_value_keys': [],
+            'allowed_storage_keys': [],
+            'endpoints': [
+                {
+                    'name': 'login',
+                    'restrictions': {
+                        'entry_point': True,
+                        'exit_point': False,
+                        'return_point': False,
+                        'call_point': True,
+                        'direct_access_allowed': True,
+                        'allowed_storage_keys': []
+                    }
+                },
+                {
+                    'name': 'submit',
+                    'restrictions': {
+                        'entry_point': False,
+                        'exit_point': True,
+                        'return_point': True,
+                        'call_point': False,
+                        'direct_access_allowed': False,
+                        'allowed_storage_keys': []
+                    }
+                }
+            ]
+        }],
+    [{
+        'name': 'provider',
+        'allowed_argument_keys': [],
+        'allowed_storage_keys': [],
+        'allowed_return_value_keys': [],
+        'endpoints': [
+                {
+                    'name': 'choose_provider',
+                    'restrictions': {
+                        'entry_point': True,
+                        'exit_point': False,
+                        'return_point': False,
+                        'call_point': False,
+                        'direct_access_allowed': True,
+                        'can_go_to': [1, 2],
+                        'allowed_storage_keys': []
+                    }
+                },
+                {
+                    'name': 'choose_social_provider',
+                    'restrictions': {
+                        'entry_point': False,
+                        'exit_point': False,
+                        'return_point': False,
+                        'call_point': True,
+                        'must_arrive_from': [0],
+                        'direct_access_allowed': True,
+                        'allowed_storage_keys': []
+                    }
+                },
+                {
+                    'name': 'choose_enterprise_tenant',
+                    'restrictions': {
+                        'entry_point': False,
+                        'exit_point': False,
+                        'return_point': False,
+                        'call_point': False,
+                        'can_go_to': [3],
+                        'must_arrive_from': [0],
+                        'direct_access_allowed': True,
+                        'allowed_storage_keys': []
+                    }
+                },
+                {
+                    'name': 'choose_enterprise_provider',
+                    'restrictions': {
+                        'entry_point': False,
+                        'exit_point': False,
+                        'return_point': False,
+                        'call_point': True,
+                        'must_arrive_from': [0, 2],
+                        'direct_access_allowed': False,
+                        'allowed_storage_keys': []
+                    }
+                },
+                {
+                    'name': 'submit',
+                    'restrictions': {
+                        'entry_point': False,
+                        'exit_point': True,
+                        'return_point': True,
+                        'call_point': False,
+                        'direct_access_allowed': False,
+                        'allowed_storage_keys': []
+                    }
+                }
+            ]
+        }],
+    []
+]
+
 
 class GenericWorkflowStackSession(object):
 
-    NAME_KEY = 'name'
+    SESSION_NAME_KEY = 'name'
 
-    ALLOWED_ARGS_KEY = 'allowed_args'
+    SESSION_RESTRICTIONS_KEY = 'restrictions'
 
-    ALLOWED_STORAGE_KEY = 'allowed_storage_keys'
+    SESSION_ALLOWED_ARGS_KEY = 'allowed_argument_keys'
 
-    ALLOWED_RETURN_VALUES_KEY = 'allowed_ret_values_keys'
+    SESSION_ALLOWED_STORAGE_KEY = 'allowed_storage_keys'
 
-    RELATIVE_SID_KEY = 'relative_sid'
+    SESSION_ALLOWED_RETURN_VALUES_KEY = 'allowed_return_values_keys'
+
+    SESSION_ENDPOINT_KEY = 'endpoints'
+
+    SESSION_ENDPOINT_NAME_KEY = 'name'
+
+    SESSION_ENDPOINT_RESTRICTION_KEY = 'restrictions'
+
+    SESSION_ENDPOINT_RESTRICTION_ENTRY_POINT_KEY = 'entry_point'
+
+    SESSION_ENDPOINT_RESTRICTION_EXIT_POINT_KEY = 'exit_point'
+
+    SESSION_ENDPOINT_RESTRICTION_RETURN_POINT_KEY = 'return_point'
+
+    SESSION_ENDPOINT_RESTRICTION_CALL_POINT_KEY = 'call_point'
+
+    SESSION_ENDPOINT_RESTRICTION_DIRECT_ACCESS_ALLOWED_KEY = 'direct_access_allowed'
+
+    SESSION_ENDPOINT_RESTRICTION_ALLOWED_STORAGE_KEY = 'allowed_storage_keys'
 
     ERROR_RETURN_VALUE_KEY = 'r_e'
 
-    def __init__(self, starting_sid, stack_session_instance, workflow_template):
+    SESSION_INDEX_KEY = 'index'
+
+    SESSION_INDEX_ENDPOINT_INDEX_KEY = 'index'
+
+    SESSION_INDEX_ENDPOINT_KEY = 'endpoints'
+
+    SESSION_STORAGE_ENDPOINT_KEY = 'e'
+
+    def __init__(self, stack_session_instance, workflow_template):
+        if stack_session_instance is None:
+            raise InvalidArguments('Stack session instance is None.')
         self._stack_session = stack_session_instance
-        self._starting_sid = starting_sid
         if not self._is_workflow_template_valid(workflow_template):
             raise InvalidWorkflowTemplate()
-        self._sessions_by_order, self._sessions_by_key = self._index_sessions(workflow_template)
+        self._workflow_template = workflow_template
+        self._session_index = self._index_sessions(workflow_template)
 
     def _is_workflow_template_valid(self, workflow_template):
-        for session in workflow_template:
-            if self.NAME_KEY not in session:
-                return False
-            if self.ALLOWED_ARGS_KEY not in session:
-                return False
-            if self.ALLOWED_RETURN_VALUES_KEY not in session:
-                return False
-            if self.ALLOWED_STORAGE_KEY not in session:
-                return False
+        for position in workflow_template:
+            for session in position:
+                if self.SESSION_NAME_KEY not in session:
+                    return False
+                if self.SESSION_ALLOWED_ARGS_KEY not in session:
+                    return False
+                if self.SESSION_ALLOWED_RETURN_VALUES_KEY not in session:
+                    return False
+                if self.SESSION_ALLOWED_STORAGE_KEY not in session:
+                    return False
 
-            if not isinstance(session[self.NAME_KEY], str):
-                return False
-            if not isinstance(session[self.ALLOWED_ARGS_KEY], list):
-                return False
-            if not isinstance(session[self.ALLOWED_RETURN_VALUES_KEY], list):
-                return False
-            if not isinstance(session[self.ALLOWED_STORAGE_KEY], list):
-                return False
+                if self.SESSION_ENDPOINT_KEY not in session:
+                    return False
 
-            if self.ERROR_RETURN_VALUE_KEY in session[self.ALLOWED_ARGS_KEY]:
-                return False
-            if self.ERROR_RETURN_VALUE_KEY in session[self.ALLOWED_RETURN_VALUES_KEY]:
-                return False
-            if self.ERROR_RETURN_VALUE_KEY in session[self.ALLOWED_STORAGE_KEY]:
-                return False
+                endpoints = session[self.SESSION_ENDPOINT_KEY]
 
+                for endpoint in endpoints:
+                    if self.SESSION_ENDPOINT_NAME_KEY not in endpoint:
+                        return False
+                    if self.SESSION_ENDPOINT_RESTRICTION_KEY not in endpoint:
+                        return False
+
+                    restriction = endpoint[self.SESSION_ENDPOINT_RESTRICTION_KEY]
+
+                    if self.SESSION_ENDPOINT_RESTRICTION_ALLOWED_STORAGE_KEY not in restriction:
+                        return False
+                    if self.SESSION_ENDPOINT_RESTRICTION_CALL_POINT_KEY not in restriction:
+                        return False
+                    if self.SESSION_ENDPOINT_RESTRICTION_ENTRY_POINT_KEY not in restriction:
+                        return False
+                    if self.SESSION_ENDPOINT_RESTRICTION_EXIT_POINT_KEY not in restriction:
+                        return False
+                    if self.SESSION_ENDPOINT_RESTRICTION_RETURN_POINT_KEY not in restriction:
+                        return False
+                    if self.SESSION_ENDPOINT_RESTRICTION_DIRECT_ACCESS_ALLOWED_KEY not in restriction:
+                        return False
         return True
 
     def _index_sessions(self, workflow_template):
-        sessions_by_order = workflow_template
-        sessions_by_key = {}
-        index = 0
+        session_index = {}
 
-        for current_session in sessions_by_order:
-            sessions_by_key[current_session[self.NAME_KEY]] = current_session
-            current_session[self.RELATIVE_SID_KEY] = index
-            index += 1
+        for i in range(0, len(workflow_template)):
+            for j in range(0, len(workflow_template[i])):
+                session_index[workflow_template[i][j][self.SESSION_NAME_KEY]] = \
+                    {self.SESSION_INDEX_KEY: (i, j), self.SESSION_INDEX_ENDPOINT_KEY: {}}
+                current_index = session_index[workflow_template[i][j][self.SESSION_NAME_KEY]]
+                endpoints_array = workflow_template[i][j][self.SESSION_ENDPOINT_KEY]
 
-        return sessions_by_order, sessions_by_key
+                for k in range(0, len(endpoints_array)):
+                    current_index[self.SESSION_INDEX_ENDPOINT_KEY][endpoints_array[k][self.SESSION_ENDPOINT_NAME_KEY]] \
+                        = {self.SESSION_INDEX_ENDPOINT_INDEX_KEY: (i, j, k)}
+        return session_index
+
+    def _get_current_session_index(self):
+        current_position = self._stack_session.stack_current_position
+        if current_position == -1:
+            raise NoWorkFlowSessionEntered()
+        return current_position, self._stack_session.get_current_session_id()
+
+    def _get_session_index(self, session_name):
+        session_index_node = self._session_index.get(session_name)
+        if session_index_node is None:
+            return None, None
+        return session_index_node[self.SESSION_INDEX_KEY]
+
+    def _get_current_endpoint_index(self):
+        current_position, current_index = self._get_current_session_index()
+        storage_container = self._stack_session.get_current_session_storage()
+        endpoint_index = storage_container[self.SESSION_STORAGE_ENDPOINT_KEY]
+        return current_position, current_index, endpoint_index
+
+    def _get_endpoint_index(self, session_name, endpoint_name):
+        session_index_node = self._session_index.get(session_name)
+        if session_index_node is None:
+            return None, None, None
+        endpoint_index_node = session_index_node[self.SESSION_INDEX_ENDPOINT_KEY].get(endpoint_name)
+        if endpoint_index_node is None:
+            return None, None, None
+        return endpoint_index_node[self.SESSION_INDEX_ENDPOINT_INDEX_KEY]
+
+    def _get_session_restrictions(self, position, session_index):
+        if position < 0 or position >= len(self._workflow_template):
+            return None
+        session_templates = self._workflow_template[position]
+        if session_index < 0 or session_index >= len(session_templates):
+            return None
+        endpoint_template = session_templates[session_index]
+        return endpoint_template[self.SESSION_RESTRICTIONS_KEY]
 
     def is_in_session(self, session_name):
-        session_info = self._sessions_by_key.get(session_name)
-        if session_info is None:
+        position, session_index = self._get_session_index(session_name)
+        if position is None:
             return False
-        relative_sid = session_info[self.RELATIVE_SID_KEY]
-        current_relative_sid, _, current_session = self._get_current_session()
-        if current_session is None:
-            raise NoWorkFlowSessionEntered()
-        return current_relative_sid == relative_sid
+        current_position, current_session_index = self._get_current_session_index()
+        return current_position == position and current_session_index == session_index
+
+    def is_in_endpoint(self, session_name, endpoint_name):
+        position, session_index, endpoint_index = self._get_endpoint_index(session_name, endpoint_name)
+        if position is None:
+            return False
+        current_position, current_session_index, current_endpoint_index = self._get_current_endpoint_index()
+        return current_position == position and current_session_index == session_index and \
+            current_endpoint_index == endpoint_index
 
     def store_in_current_session(self, key, val):
-        _, session_name, session = self._get_current_session()
-        if session is None:
+        current_position, current_session_index = self._get_current_session_index()
+        if current_position is None:
             raise NoWorkFlowSessionEntered()
-        if key not in self._sessions_by_key[session_name][self.ALLOWED_STORAGE_KEY]:
+        session_restrictions = self._get_session_restrictions(current_position, current_session_index)
+        if key not in session_restrictions[self.SESSION_ALLOWED_ARGS_KEY]:
             raise StorageKeyNotAllowed(key)
-        session[key] = val
+        self._stack_session.store_in_current_session(key, val)
 
     def get_current_session_args(self):
-        _, session_name, session = self._get_current_session()
-        if session is None:
+        current_position, current_session_index = self._get_current_session_index()
+        if current_position is None:
             raise NoWorkFlowSessionEntered()
-        recorded_args = {}
-        for arg_key in self._sessions_by_key[session_name][self.ALLOWED_ARGS_KEY]:
-            recorded_args[arg_key] = session[arg_key]
-        return recorded_args
+        return self._stack_session.get_current_session_arguments()
 
     def get_previous_session_return_value(self):
-        _, session_name, session = self._get_current_session()
-        if session is None:
+        current_position, current_session_index = self._get_current_session_index()
+        if current_position is None:
             raise NoWorkFlowSessionEntered()
-        return session.get(self.ERROR_RETURN_VALUE_KEY)
+        error_value = self._stack_session.get_current_session_storage_value(self.ERROR_RETURN_VALUE_KEY)
+        if error_value is not None:
+            return True, error_value
+        session_restrictions = self._get_session_restrictions(current_position, current_session_index)
 
-    def clear_previous_session_return_value(self):
-        _, session_name, session = self._get_current_session()
-        if session is None:
-            raise NoWorkFlowSessionEntered()
-        if self.ERROR_RETURN_VALUE_KEY in session:
-            del session[self.ERROR_RETURN_VALUE_KEY]
+        recorded_return_values = {}
+        for key in session_restrictions[self.SESSION_ALLOWED_RETURN_VALUES_KEY]:
+            recorded_return_values[key] = self._stack_session.get_current_session_storage_value(key)
+
+        return False, recorded_return_values
 
     def enter_session(self, session_name, args):
-        if not self._is_entering_allowed(session_name):
-            raise CannotEnterSession()
-
-        recorded_args = {}
-        for key in self._sessions_by_key[session_name][self.ALLOWED_ARGS_KEY]:
-            if key not in args:
-                raise ArgKeyNotPresent(key)
-            recorded_args[key] = args[key]
-
-        _, _, next_session = self._stack_session.push_session()
-
-        _, current_session_name, _ = self._get_current_session()
-        for key in recorded_args:
-            next_session[key] = recorded_args[key]
+        pass
 
     def exit_session(self, return_values, is_error=False, error=None):
-        recorded_return_val = {}
-
-        if is_error and error is None:
-            raise InvalidArguments('is_error is true, but no error object passed')
-
-        current_relative_sid, current_session_name, current_session = self._get_current_session()
-        if current_session is None:
-            raise NoWorkFlowSessionEntered()
-
-        if is_error:
-            recorded_return_val[self.ERROR_RETURN_VALUE_KEY] = error
-        else:
-            for ret_val_key in self._sessions_by_key[current_session_name][self.ALLOWED_RETURN_VALUES_KEY]:
-                if ret_val_key not in return_values:
-                    raise ReturnArgKeyNotPresent(ret_val_key)
-                recorded_return_val[ret_val_key] = return_values[ret_val_key]
-
-        self._stack_session.pop_session()
-        _, previous_global_session = self._stack_session.get_current_session()
-
-        if previous_global_session is not None:
-            for key in recorded_return_val:
-                previous_global_session[key] = recorded_return_val[key]
-        return recorded_return_val
+        pass
 
     def _is_entering_allowed(self, session_name):
-        if self._sessions_by_key.get(session_name) is None:
-            return False
+        pass
 
-        current_relative_sid, _, current_session = self._get_current_session()
-        if current_session is None:
-            global_sid, _ = self._stack_session.get_current_session()
-            if global_sid != self._starting_sid - 1 or \
-                    self._sessions_by_key.get(session_name)[self.RELATIVE_SID_KEY] != 0:
-                return False
-        elif self._sessions_by_key.get(session_name)[self.RELATIVE_SID_KEY] != current_relative_sid + 1:
-            return False
-
-        return True
-
-    def _get_current_session(self):
-        current_global_sid, current_session = self._stack_session.get_current_session()
-        if current_session is None:
-            return None, None, None
-        if (self._starting_sid + len(self._sessions_by_order)) <= current_global_sid or \
-                self._starting_sid > current_global_sid:
-            return None, None, None
-        relative_sid = current_global_sid - self._starting_sid
-        return relative_sid, self._sessions_by_order[relative_sid][self.NAME_KEY], current_session

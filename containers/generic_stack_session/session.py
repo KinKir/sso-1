@@ -15,7 +15,7 @@ class GenericStackSession(GenericSession):
 
     STACK_ARCHIVE_KEY = 'a'
 
-    STACK_POSITION_KEY = 'p'
+    STACK_CURRENT_POSITION_KEY = 'p'
 
     STACK_ID_KEY = 'i'
 
@@ -33,7 +33,7 @@ class GenericStackSession(GenericSession):
             self[self.STACK_ARCHIVE_KEY] = {}
             self[self.STACK_STORAGE_KEY] = {}
             self[self.STACK_ID_KEY] = stack_id
-            self[self.STACK_POSITION_KEY] = -1
+            self[self.STACK_CURRENT_POSITION_KEY] = -1
         else:
             super(GenericStackSession, self).__init__(dictionary)
             if self.get(self.STACK_ARCHIVE_KEY) is None:
@@ -42,32 +42,32 @@ class GenericStackSession(GenericSession):
                 raise UnableToDeserialize()
             if self.get(self.STACK_ID_KEY) is None:
                 raise UnableToDeserialize()
-            if self.get(self.STACK_POSITION_KEY) is None:
+            if self.get(self.STACK_CURRENT_POSITION_KEY) is None:
                 raise UnableToDeserialize()
 
     def push_session(self, sid):
         if sid is None:
             raise InvalidArguments()
-        current_position = self[self.STACK_POSITION_KEY]
+        current_position = self[self.STACK_CURRENT_POSITION_KEY]
         self[self.STACK_STORAGE_KEY][str(current_position + 1)] = {
             self.SESSION_ARGUMENTS_KEY: {},
             self.SESSION_ID_KEY: sid,
             self.SESSION_STORAGE_KEY: {}
         }
-        self[self.STACK_POSITION_KEY] += 1
-        return self[self.STACK_POSITION_KEY]
+        self[self.STACK_CURRENT_POSITION_KEY] += 1
+        return self[self.STACK_CURRENT_POSITION_KEY]
 
     def pop_session(self):
-        current_position = self[self.STACK_POSITION_KEY]
+        current_position = self[self.STACK_CURRENT_POSITION_KEY]
         if current_position == -1:
             raise OverflowError()
         self[self.STACK_ARCHIVE_KEY][str(current_position)] = self[self.STACK_STORAGE_KEY][str(current_position)]
         del self[self.STACK_STORAGE_KEY][str(current_position)]
-        self[self.STACK_POSITION_KEY] -= 1
-        return self.STACK_POSITION_KEY
+        self[self.STACK_CURRENT_POSITION_KEY] -= 1
+        return self.STACK_CURRENT_POSITION_KEY
 
     def _get_current_session(self):
-        current_position = self[self.STACK_POSITION_KEY]
+        current_position = self[self.STACK_CURRENT_POSITION_KEY]
         if current_position == -1:
             return None
         return self[self.STACK_STORAGE_KEY][str(current_position)]
@@ -91,6 +91,12 @@ class GenericStackSession(GenericSession):
         for key in current_session[self.SESSION_STORAGE_KEY]:
             storage_container[key] = current_session[self.SESSION_STORAGE_KEY][key]
         return storage_container
+
+    def get_current_session_storage_value(self, key):
+        current_session = self._get_current_session()
+        if current_session is None:
+            return None
+        return current_session[self.SESSION_STORAGE_KEY].get(key)
 
     def get_current_session_arguments(self):
         current_session = self._get_current_session()
@@ -133,6 +139,10 @@ class GenericStackSession(GenericSession):
         for key in archived_session[self.SESSION_ARGUMENTS_KEY]:
             arg_container[key] = archived_session[self.SESSION_ARGUMENTS_KEY][key]
         return arg_container
+
+    @property
+    def stack_current_position(self):
+        return self[self.STACK_CURRENT_POSITION_KEY]
 
     @property
     def stack_id(self):
