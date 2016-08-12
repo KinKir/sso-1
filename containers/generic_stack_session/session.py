@@ -114,6 +114,15 @@ class GenericStackSession(GenericSession):
             return None
         session[self.SESSION_STORAGE_KEY][key] = value
 
+    def delete_value_in_current_session(self, key):
+        session = self._get_current_session()
+        if session is None:
+            return None
+        if session[self.SESSION_STORAGE_KEY].get(key) is None:
+            return False
+        del session[self.SESSION_STORAGE_KEY][key]
+        return True
+
     def set_argument_for_current_session(self, key, value):
         session = self._get_current_session()
         if session is None:

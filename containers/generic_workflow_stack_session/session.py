@@ -21,7 +21,8 @@ WORKFLOW_TEMPLATE = [
                         'return_point': False,
                         'call_point': True,
                         'direct_access_allowed': True,
-                        'allowed_storage_keys': []
+                        'allowed_storage_keys': [],
+                        'is_dead_end': False
                     }
                 },
                 {
@@ -32,7 +33,8 @@ WORKFLOW_TEMPLATE = [
                         'return_point': True,
                         'call_point': False,
                         'direct_access_allowed': False,
-                        'allowed_storage_keys': []
+                        'allowed_storage_keys': [],
+                        'is_dead_end': False
                     }
                 }
             ]
@@ -51,7 +53,8 @@ WORKFLOW_TEMPLATE = [
                         'return_point': False,
                         'call_point': True,
                         'direct_access_allowed': True,
-                        'allowed_storage_keys': []
+                        'allowed_storage_keys': [],
+                        'is_dead_end': False
                     }
                 },
                 {
@@ -62,7 +65,8 @@ WORKFLOW_TEMPLATE = [
                         'return_point': True,
                         'call_point': False,
                         'direct_access_allowed': False,
-                        'allowed_storage_keys': []
+                        'allowed_storage_keys': [],
+                        'is_dead_end': False
                     }
                 }
             ]
@@ -82,7 +86,8 @@ WORKFLOW_TEMPLATE = [
                         'call_point': False,
                         'direct_access_allowed': True,
                         'can_go_to': [1, 2],
-                        'allowed_storage_keys': []
+                        'allowed_storage_keys': [],
+                        'is_dead_end': False
                     }
                 },
                 {
@@ -94,7 +99,8 @@ WORKFLOW_TEMPLATE = [
                         'call_point': True,
                         'must_arrive_from': [0],
                         'direct_access_allowed': True,
-                        'allowed_storage_keys': []
+                        'allowed_storage_keys': [],
+                        'is_dead_end': False
                     }
                 },
                 {
@@ -107,7 +113,8 @@ WORKFLOW_TEMPLATE = [
                         'can_go_to': [3],
                         'must_arrive_from': [0],
                         'direct_access_allowed': True,
-                        'allowed_storage_keys': []
+                        'allowed_storage_keys': [],
+                        'is_dead_end': False
                     }
                 },
                 {
@@ -119,7 +126,8 @@ WORKFLOW_TEMPLATE = [
                         'call_point': True,
                         'must_arrive_from': [0, 2],
                         'direct_access_allowed': False,
-                        'allowed_storage_keys': []
+                        'allowed_storage_keys': [],
+                        'is_dead_end': False
                     }
                 },
                 {
@@ -130,7 +138,8 @@ WORKFLOW_TEMPLATE = [
                         'return_point': True,
                         'call_point': False,
                         'direct_access_allowed': False,
-                        'allowed_storage_keys': []
+                        'allowed_storage_keys': [],
+                        'is_dead_end': False
                     }
                 }
             ]
@@ -168,6 +177,8 @@ class GenericWorkflowStackSession(object):
     SESSION_ENDPOINT_RESTRICTION_DIRECT_ACCESS_ALLOWED_KEY = 'direct_access_allowed'
 
     SESSION_ENDPOINT_RESTRICTION_ALLOWED_STORAGE_KEY = 'allowed_storage_keys'
+
+    SESSION_ENDPOINT_DEAD_END_KEY = 'is_dead_end'
 
     ERROR_RETURN_VALUE_KEY = 'r_e'
 
@@ -322,6 +333,21 @@ class GenericWorkflowStackSession(object):
             recorded_return_values[key] = self._stack_session.get_current_session_storage_value(key)
 
         return False, recorded_return_values
+
+    def remove_previous_session_return_value(self):
+        current_position, current_session_index = self._get_current_session_index()
+        if current_position is None:
+            raise NoWorkFlowSessionEntered()
+
+        error_value = self._stack_session.get_current_session_storage_value(self.ERROR_RETURN_VALUE_KEY)
+        if error_value is not None:
+            self._stack_session.delete_value_in_current_session(self.ERROR_RETURN_VALUE_KEY)
+            return
+
+        session_restrictions = self._get_session_restrictions(current_position, current_session_index)
+        for key in session_restrictions[self.SESSION_ALLOWED_RETURN_VALUES_KEY]:
+            self._stack_session.delete_value_in_current_session(key)
+        return
 
     def enter_session(self, session_name, args):
         pass
