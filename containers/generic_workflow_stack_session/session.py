@@ -351,7 +351,10 @@ class GenericWorkflowStackSession(object):
             self._stack_session.delete_value_in_current_session(key)
         return
 
-    def enter_session(self, session_name, args):
+    def go_to_endpoint(self, endpoint_name):
+        pass
+
+    def enter_session(self, session_name, endpoint_name, args):
         pass
 
     def exit_session(self, return_values, is_error=False, error=None):
