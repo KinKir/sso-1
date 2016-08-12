@@ -178,7 +178,7 @@ class GenericWorkflowStackSession(object):
 
     SESSION_ENDPOINT_RESTRICTION_ALLOWED_STORAGE_KEY = 'allowed_storage_keys'
 
-    SESSION_ENDPOINT_DEAD_END_KEY = 'is_dead_end'
+    SESSION_ENDPOINT_RESTRICTION_DEAD_END_KEY = 'is_dead_end'
 
     ERROR_RETURN_VALUE_KEY = 'r_e'
 
@@ -235,6 +235,8 @@ class GenericWorkflowStackSession(object):
                     if self.SESSION_ENDPOINT_RESTRICTION_RETURN_POINT_KEY not in restriction:
                         return False
                     if self.SESSION_ENDPOINT_RESTRICTION_DIRECT_ACCESS_ALLOWED_KEY not in restriction:
+                        return False
+                    if self.SESSION_ENDPOINT_RESTRICTION_DEAD_END_KEY not in restriction:
                         return False
         return True
 
