@@ -190,7 +190,7 @@ class GenericWorkflowStackSession(object):
 
     SESSION_ENDPOINT_RESTRICTION_CAN_GO_TO = 'can_go_to'
 
-    ERROR_RETURN_VALUE_KEY = 'r_e'
+    SESSION_STORAGE_ERROR_RETURN_VALUE_KEY = 'r_e'
 
     SESSION_INDEX_KEY = 'index'
 
@@ -224,6 +224,15 @@ class GenericWorkflowStackSession(object):
                 if self.SESSION_ENDPOINT_KEY not in session:
                     return False
 
+                if self.SESSION_STORAGE_ERROR_RETURN_VALUE_KEY in session[self.SESSION_ALLOWED_RETURN_VALUES_KEY]:
+                    return False
+                if self.SESSION_STORAGE_ERROR_RETURN_VALUE_KEY in session[self.SESSION_ALLOWED_STORAGE_KEY]:
+                    return False
+                if self.SESSION_STORAGE_ENDPOINT_KEY in session[self.SESSION_ALLOWED_STORAGE_KEY]:
+                    return False
+                if self.SESSION_STORAGE_ENDPOINT_KEY in session[self.SESSION_ALLOWED_RETURN_VALUES_KEY]:
+                    return False
+
                 endpoints = session[self.SESSION_ENDPOINT_KEY]
 
                 for endpoint in endpoints:
@@ -248,6 +257,7 @@ class GenericWorkflowStackSession(object):
                         return False
                     if self.SESSION_ENDPOINT_RESTRICTION_DEAD_END_KEY not in restriction:
                         return False
+
         return True
 
     def _index_sessions(self, workflow_template):
@@ -339,7 +349,7 @@ class GenericWorkflowStackSession(object):
         if current_position is None:
             raise NoWorkFlowSessionEntered()
         _, session_restrictions, _ = self._get_session_info(current_position, current_session_index)
-        if key not in session_restrictions[self.SESSION_ALLOWED_ARGS_KEY]:
+        if key not in session_restrictions[self.SESSION_ALLOWED_STORAGE_KEY]:
             raise StorageKeyNotAllowed(key)
         self._stack_session.store_in_current_session(key, val)
 
@@ -353,7 +363,7 @@ class GenericWorkflowStackSession(object):
         current_position, current_session_index = self._get_current_session_index()
         if current_position is None:
             raise NoWorkFlowSessionEntered()
-        error_value = self._stack_session.get_current_session_storage_value(self.ERROR_RETURN_VALUE_KEY)
+        error_value = self._stack_session.get_current_session_storage_value(self.SESSION_STORAGE_ERROR_RETURN_VALUE_KEY)
         if error_value is not None:
             return True, error_value
         _, session_restrictions, _ = self._get_session_info(current_position, current_session_index)
@@ -369,9 +379,9 @@ class GenericWorkflowStackSession(object):
         if current_position is None:
             raise NoWorkFlowSessionEntered()
 
-        error_value = self._stack_session.get_current_session_storage_value(self.ERROR_RETURN_VALUE_KEY)
+        error_value = self._stack_session.get_current_session_storage_value(self.SESSION_STORAGE_ERROR_RETURN_VALUE_KEY)
         if error_value is not None:
-            self._stack_session.delete_value_in_current_session(self.ERROR_RETURN_VALUE_KEY)
+            self._stack_session.delete_value_in_current_session(self.SESSION_STORAGE_ERROR_RETURN_VALUE_KEY)
             return
 
         _, session_restrictions, _ = self._get_session_info(current_position, current_session_index)
@@ -454,7 +464,7 @@ class GenericWorkflowStackSession(object):
                                                      previous_session_return_endpoint_index)
 
         if is_error:
-            self._stack_session.store_in_current_session(self.ERROR_RETURN_VALUE_KEY, error)
+            self._stack_session.store_in_current_session(self.SESSION_STORAGE_ERROR_RETURN_VALUE_KEY, error)
         else:
             for recorded_return_value_key in recorded_return_values:
                 self._stack_session.store_in_current_session(recorded_return_value_key,
@@ -504,7 +514,7 @@ class GenericWorkflowStackSession(object):
             if current_endpoint_index not in must_come_from:
                 return False
 
-        if next_endpoint_restrictions[self.SESSION_ENDPOINT_RESTRICTION_ENTRY_POINT_KEY]:
+        if next_endpoint_restrictions[self.SESSION_ENDPOINT_RESTRICTION_EXIT_POINT_KEY]:
             return False
 
         return True
