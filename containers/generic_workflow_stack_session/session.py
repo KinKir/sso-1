@@ -294,10 +294,10 @@ class GenericWorkflowStackSession(object):
 
     def _get_session_info(self, position, session_index):
         if position < 0 or position >= len(self._workflow_template):
-            return None
+            return None, None, None
         session_templates = self._workflow_template[position]
         if session_index < 0 or session_index >= len(session_templates):
-            return None
+            return None, None, None
 
         requested_session_template = session_templates[session_index]
         return requested_session_template[self.SESSION_NAME_KEY], \
@@ -306,13 +306,13 @@ class GenericWorkflowStackSession(object):
 
     def _get_endpoint_info(self, position, session_index, endpoint_index):
         if position < 0 or position >= len(self._workflow_template):
-            return None
+            return None, None, None
         session_templates = self._workflow_template[position]
         if session_index < 0 or session_index >= len(session_templates):
-            return None
+            return None, None, None
         endpoint_templates = session_templates[session_index][self.SESSION_ENDPOINT_KEY]
         if endpoint_index < 0 or endpoint_index >= len(endpoint_templates):
-            return None
+            return None, None, None
 
         requested_endpoint_template = endpoint_templates[endpoint_index]
         return session_templates[session_index][self.SESSION_NAME_KEY], \
@@ -399,11 +399,95 @@ class GenericWorkflowStackSession(object):
 
         self._stack_session.store_in_current_session(self.SESSION_STORAGE_ENDPOINT_KEY, next_endpoint_index)
 
-    def enter_session(self, session_name, endpoint_name, args):
-        pass
+    def enter_session(self, next_session_name, next_endpoint_name, args):
+        current_position, current_session_index, current_endpoint_index = self._get_current_endpoint_index()
+        next_position, next_session_index, next_endpoint_index = self._get_endpoint_index(next_session_name,
+                                                                                          next_endpoint_name)
+        if next_position is None:
+            raise CannotEnterSession('Mentioned session/endpoint does not exists')
+        _, _, next_endpoint_restrictions = self._get_endpoint_info(next_position, next_session_index,
+                                                                   next_endpoint_index)
+
+        _, _, current_endpoint_restrictions = self._get_endpoint_info(current_position, current_session_index,
+                                                                      current_endpoint_index)
+        if not self._is_entering_to_session_allowed(current_position, current_endpoint_restrictions, next_position,
+                                                    next_endpoint_restrictions):
+            raise CannotEnterSession()
+
+        _, next_session_restrictions, _ = self._get_session_info(next_position, next_session_name)
+
+        recorded_args = {}
+        for arg_key in next_session_restrictions[self.SESSION_ALLOWED_STORAGE_KEY]:
+            if arg_key not in args:
+                raise ArgKeyNotPresent(arg_key)
+            recorded_args[arg_key] = args[arg_key]
+
+        self._stack_session.push_session(next_session_index)
+        self._stack_session.set_arguments_for_current_session(recorded_args)
+        self._stack_session.store_in_current_session(self.SESSION_STORAGE_ENDPOINT_KEY, next_endpoint_index)
 
     def exit_session(self, return_values, is_error=False, error=None):
-        pass
+        if is_error and (error is None):
+            raise InvalidArguments('if is_error is True, then error must not be None.')
+
+        current_position, current_session_index, current_endpoint_index = self._get_current_endpoint_index()
+        if current_position is None:
+            raise NoWorkFlowSessionEntered()
+
+        _, current_session_restrictions, _ = self._get_session_info(current_position, current_session_index)
+        allowed_return_values = current_session_restrictions[self.SESSION_ALLOWED_RETURN_VALUES_KEY]
+
+        recorded_return_values = {}
+        for return_value_key in allowed_return_values:
+            if return_value_key not in return_values:
+                raise ReturnArgKeyNotPresent(return_value_key)
+            recorded_return_values[return_value_key] = return_values[return_value_key]
+
+        previous_position = self._stack_session.pop_session()
+        if previous_position == -1:
+            return
+
+        previous_session_index = self._stack_session.get_current_session_id()
+        previous_session_return_endpoint_index = self._get_return_endpoint_index_in_session(previous_position,
+                                                                                            previous_session_index)
+        self._stack_session.store_in_current_session(self.SESSION_STORAGE_ENDPOINT_KEY,
+                                                     previous_session_return_endpoint_index)
+
+        if is_error:
+            self._stack_session.store_in_current_session(self.ERROR_RETURN_VALUE_KEY, error)
+        else:
+            for recorded_return_value_key in recorded_return_values:
+                self._stack_session.store_in_current_session(recorded_return_value_key,
+                                                             recorded_return_values[recorded_return_value_key])
+
+    def _is_entering_to_session_allowed(self, current_position, current_endpoint_restrictions, next_position,
+                                        next_endpoint_restriction):
+
+        if current_position is None:
+            if next_position != 0:
+                return False
+        else:
+            if next_position != current_position + 1:
+                return False
+
+        if current_endpoint_restrictions[self.SESSION_ENDPOINT_RESTRICTION_DEAD_END_KEY]:
+            return False
+
+        if current_position is not None:
+            if not current_endpoint_restrictions[self.SESSION_ENDPOINT_RESTRICTION_CALL_POINT_KEY]:
+                return False
+
+        if not next_endpoint_restriction[self.SESSION_ENDPOINT_RESTRICTION_ENTRY_POINT_KEY]:
+            return False
+
+        return True
+
+    def _get_return_endpoint_index_in_session(self, position, session_index):
+        _, _, endpoints = self._get_session_info(position, session_index)
+        for i in range(0, len(endpoints)):
+            if endpoints[i][self.SESSION_ENDPOINT_RESTRICTION_KEY][self.SESSION_ENDPOINT_RESTRICTION_RETURN_POINT_KEY]:
+                return i
+        raise InvalidArguments('No return point in this session')
 
     def _is_entering_to_endpoint_allowed(self, current_endpoint_index, current_endpoint_restrictions,
                                          next_endpoint_index, next_endpoint_restrictions):

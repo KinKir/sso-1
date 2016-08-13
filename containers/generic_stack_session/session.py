@@ -123,11 +123,12 @@ class GenericStackSession(GenericSession):
         del session[self.SESSION_STORAGE_KEY][key]
         return True
 
-    def set_argument_for_current_session(self, key, value):
+    def set_arguments_for_current_session(self, args):
         session = self._get_current_session()
         if session is None:
             return None
-        session[self.SESSION_ARGUMENTS_KEY][key] = value
+        for arg_key in args:
+            session[self.SESSION_ARGUMENTS_KEY][arg_key] = args[arg_key]
 
     def get_archived_session_storage(self, position):
         archived_session = self._get_archived_session(position)
