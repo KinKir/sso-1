@@ -9,9 +9,11 @@ from exceptions import InvalidArguments
 WORKFLOW_TEMPLATE = [
     [{
             'name': 'oauth2',
-            'allowed_argument_keys': [],
-            'allowed_return_value_keys': [],
-            'allowed_storage_keys': [],
+            'restrictions': {
+                'allowed_argument_keys': [],
+                'allowed_return_value_keys': [],
+                'allowed_storage_keys': []
+            },
             'endpoints': [
                 {
                     'name': 'auth',
@@ -41,9 +43,11 @@ WORKFLOW_TEMPLATE = [
         }],
     [{
             'name': 'sso',
-            'allowed_argument_keys': [],
-            'allowed_return_value_keys': [],
-            'allowed_storage_keys': [],
+            'restrictions': {
+                'allowed_argument_keys': [],
+                'allowed_return_value_keys': [],
+                'allowed_storage_keys': []
+            },
             'endpoints': [
                 {
                     'name': 'login',
@@ -73,9 +77,11 @@ WORKFLOW_TEMPLATE = [
         }],
     [{
         'name': 'provider',
-        'allowed_argument_keys': [],
-        'allowed_storage_keys': [],
-        'allowed_return_value_keys': [],
+        'restrictions': {
+            'allowed_argument_keys': [],
+            'allowed_return_value_keys': [],
+            'allowed_storage_keys': []
+        },
         'endpoints': [
                 {
                     'name': 'choose_provider',
@@ -180,6 +186,10 @@ class GenericWorkflowStackSession(object):
 
     SESSION_ENDPOINT_RESTRICTION_DEAD_END_KEY = 'is_dead_end'
 
+    SESSION_ENDPOINT_RESTRICTION_MUST_COME_FROM = 'must_come_from'
+
+    SESSION_ENDPOINT_RESTRICTION_CAN_GO_TO = 'can_go_to'
+
     ERROR_RETURN_VALUE_KEY = 'r_e'
 
     SESSION_INDEX_KEY = 'index'
@@ -273,7 +283,7 @@ class GenericWorkflowStackSession(object):
         endpoint_index = storage_container[self.SESSION_STORAGE_ENDPOINT_KEY]
         return current_position, current_index, endpoint_index
 
-    def _get_endpoint_index(self, session_name, endpoint_name):
+    def _get_endpoint_index(self, session_name: str, endpoint_name: str) -> tuple:
         session_index_node = self._session_index.get(session_name)
         if session_index_node is None:
             return None, None, None
@@ -282,14 +292,32 @@ class GenericWorkflowStackSession(object):
             return None, None, None
         return endpoint_index_node[self.SESSION_INDEX_ENDPOINT_INDEX_KEY]
 
-    def _get_session_restrictions(self, position, session_index):
+    def _get_session_info(self, position, session_index):
         if position < 0 or position >= len(self._workflow_template):
             return None
         session_templates = self._workflow_template[position]
         if session_index < 0 or session_index >= len(session_templates):
             return None
-        endpoint_template = session_templates[session_index]
-        return endpoint_template[self.SESSION_RESTRICTIONS_KEY]
+
+        requested_session_template = session_templates[session_index]
+        return requested_session_template[self.SESSION_NAME_KEY], \
+            requested_session_template[self.SESSION_RESTRICTIONS_KEY], \
+            requested_session_template[self.SESSION_ENDPOINT_KEY]
+
+    def _get_endpoint_info(self, position, session_index, endpoint_index):
+        if position < 0 or position >= len(self._workflow_template):
+            return None
+        session_templates = self._workflow_template[position]
+        if session_index < 0 or session_index >= len(session_templates):
+            return None
+        endpoint_templates = session_templates[session_index][self.SESSION_ENDPOINT_KEY]
+        if endpoint_index < 0 or endpoint_index >= len(endpoint_templates):
+            return None
+
+        requested_endpoint_template = endpoint_templates[endpoint_index]
+        return session_templates[session_index][self.SESSION_NAME_KEY], \
+            requested_endpoint_template[self.SESSION_ENDPOINT_NAME_KEY], \
+            requested_endpoint_template[self.SESSION_ENDPOINT_RESTRICTION_KEY]
 
     def is_in_session(self, session_name):
         position, session_index = self._get_session_index(session_name)
@@ -310,7 +338,7 @@ class GenericWorkflowStackSession(object):
         current_position, current_session_index = self._get_current_session_index()
         if current_position is None:
             raise NoWorkFlowSessionEntered()
-        session_restrictions = self._get_session_restrictions(current_position, current_session_index)
+        _, session_restrictions, _ = self._get_session_info(current_position, current_session_index)
         if key not in session_restrictions[self.SESSION_ALLOWED_ARGS_KEY]:
             raise StorageKeyNotAllowed(key)
         self._stack_session.store_in_current_session(key, val)
@@ -328,7 +356,7 @@ class GenericWorkflowStackSession(object):
         error_value = self._stack_session.get_current_session_storage_value(self.ERROR_RETURN_VALUE_KEY)
         if error_value is not None:
             return True, error_value
-        session_restrictions = self._get_session_restrictions(current_position, current_session_index)
+        _, session_restrictions, _ = self._get_session_info(current_position, current_session_index)
 
         recorded_return_values = {}
         for key in session_restrictions[self.SESSION_ALLOWED_RETURN_VALUES_KEY]:
@@ -346,13 +374,30 @@ class GenericWorkflowStackSession(object):
             self._stack_session.delete_value_in_current_session(self.ERROR_RETURN_VALUE_KEY)
             return
 
-        session_restrictions = self._get_session_restrictions(current_position, current_session_index)
+        _, session_restrictions, _ = self._get_session_info(current_position, current_session_index)
         for key in session_restrictions[self.SESSION_ALLOWED_RETURN_VALUES_KEY]:
             self._stack_session.delete_value_in_current_session(key)
         return
 
     def go_to_endpoint(self, endpoint_name):
-        pass
+        current_position, current_session_index, current_endpoint_index = self._get_current_endpoint_index()
+        if current_position is None:
+            raise NoWorkFlowSessionEntered()
+
+        current_endpoint_session_name, current_endpoint_name, current_endpoint_restrictions = \
+            self._get_endpoint_info(current_position, current_session_index, current_endpoint_index)
+
+        position, session_index, next_endpoint_index = self._get_endpoint_index(current_endpoint_session_name,
+                                                                                endpoint_name)
+        if position is None:
+            raise InvalidArguments()  # TODO: Raise proper error
+        _, _, next_endpoint_restrictions = self._get_endpoint_info(position, session_index, next_endpoint_index)
+
+        if not self._is_entering_to_endpoint_allowed(current_endpoint_index, current_endpoint_restrictions,
+                                                     next_endpoint_index, next_endpoint_restrictions):
+            raise InvalidArguments()  # TODO: Raise proper error
+
+        self._stack_session.store_in_current_session(self.SESSION_STORAGE_ENDPOINT_KEY, next_endpoint_index)
 
     def enter_session(self, session_name, endpoint_name, args):
         pass
@@ -360,6 +405,24 @@ class GenericWorkflowStackSession(object):
     def exit_session(self, return_values, is_error=False, error=None):
         pass
 
-    def _is_entering_allowed(self, session_name):
-        pass
+    def _is_entering_to_endpoint_allowed(self, current_endpoint_index, current_endpoint_restrictions,
+                                         next_endpoint_index, next_endpoint_restrictions):
+        if current_endpoint_restrictions[self.SESSION_ENDPOINT_RESTRICTION_DEAD_END_KEY]:
+            return False
+
+        can_go_to = current_endpoint_restrictions.get(self.SESSION_ENDPOINT_RESTRICTION_CAN_GO_TO)
+        if can_go_to is not None:
+            if next_endpoint_index not in can_go_to:
+                return False
+
+        must_come_from = next_endpoint_restrictions.get(self.SESSION_ENDPOINT_RESTRICTION_MUST_COME_FROM)
+        if must_come_from is not None:
+            if current_endpoint_index not in must_come_from:
+                return False
+
+        if next_endpoint_restrictions[self.SESSION_ENDPOINT_RESTRICTION_ENTRY_POINT_KEY]:
+            return False
+
+        return True
+
 
