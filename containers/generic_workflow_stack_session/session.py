@@ -482,6 +482,9 @@ class GenericWorkflowStackSession(object):
             if current_endpoint_index not in \
                    next_endpoint_restrictions[self.SESSION_ENDPOINT_RESTRICTION_AUTO_ARRIVE_ALLOWED_FROM_KEY]:
                 raise CannotEnterEndpoint('Endpoint does not allow auto arrive from current endpoint.')
+            if not self._is_entering_to_endpoint_allowed(current_endpoint_index, current_endpoint_restrictions,
+                                                         next_endpoint_index, next_endpoint_restrictions):
+                raise CannotEnterEndpoint()
         else:
             raise CannotEnterEndpoint('Auto arrive is not supported.')
 
