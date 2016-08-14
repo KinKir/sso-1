@@ -5,6 +5,8 @@ from exceptions import ArgKeyNotPresent
 from exceptions import StorageKeyNotAllowed
 from exceptions import CannotEnterSession
 from exceptions import InvalidArguments
+from exceptions import CannotEnterEndpoint
+
 
 WORKFLOW_TEMPLATE = [
     [{
@@ -56,8 +58,6 @@ WORKFLOW_TEMPLATE = [
                         'exit_point': False,
                         'return_point': False,
                         'call_point': True,
-                        'direct_access_allowed': True,
-                        'allowed_storage_keys': [],
                         'is_dead_end': False
                     }
                 },
@@ -68,8 +68,6 @@ WORKFLOW_TEMPLATE = [
                         'exit_point': True,
                         'return_point': True,
                         'call_point': False,
-                        'direct_access_allowed': False,
-                        'allowed_storage_keys': [],
                         'is_dead_end': False
                     }
                 }
@@ -90,9 +88,7 @@ WORKFLOW_TEMPLATE = [
                         'exit_point': False,
                         'return_point': False,
                         'call_point': False,
-                        'direct_access_allowed': True,
                         'can_go_to': [1, 2],
-                        'allowed_storage_keys': [],
                         'is_dead_end': False
                     }
                 },
@@ -104,8 +100,6 @@ WORKFLOW_TEMPLATE = [
                         'return_point': False,
                         'call_point': True,
                         'must_arrive_from': [0],
-                        'direct_access_allowed': True,
-                        'allowed_storage_keys': [],
                         'is_dead_end': False
                     }
                 },
@@ -118,8 +112,6 @@ WORKFLOW_TEMPLATE = [
                         'call_point': False,
                         'can_go_to': [3],
                         'must_arrive_from': [0],
-                        'direct_access_allowed': True,
-                        'allowed_storage_keys': [],
                         'is_dead_end': False
                     }
                 },
@@ -131,8 +123,6 @@ WORKFLOW_TEMPLATE = [
                         'return_point': False,
                         'call_point': True,
                         'must_arrive_from': [0, 2],
-                        'direct_access_allowed': False,
-                        'allowed_storage_keys': [],
                         'is_dead_end': False
                     }
                 },
@@ -143,14 +133,98 @@ WORKFLOW_TEMPLATE = [
                         'exit_point': True,
                         'return_point': True,
                         'call_point': False,
-                        'direct_access_allowed': False,
-                        'allowed_storage_keys': [],
                         'is_dead_end': False
                     }
                 }
             ]
         }],
-    []
+    [{
+        'name': 'provider_class_local',
+        'restrictions': {
+            'allowed_argument_keys': [],
+            'allowed_return_value_keys': [],
+            'allowed_storage_keys': []
+        },
+        'endpoints': [
+            {
+                'name': 'sign_in',
+                'restrictions': {
+                    'entry_point': True,
+                    'exit_point': True,
+                    'return_point': False,
+                    'call_point': False,
+                    'is_dead_end': False
+                }
+            },
+            {
+                'name': 'sign_up',
+                'restrictions': {
+                    'entry_point': True,
+                    'exit_point': False,
+                    'return_point': False,
+                    'call_point': False,
+                    'is_dead_end': False,
+                    'can_go_to': [2]
+                }
+            },
+            {
+                'name': 'send_verification_email',
+                'restrictions': {
+                    'entry_point': False,
+                    'exit_point': False,
+                    'return_point': False,
+                    'call_point': False,
+                    'is_dead_end': False,
+                    'must_arrive_from': [1]
+                }
+            },
+            {
+                'name': 'email_verifier',
+                'restrictions': {
+                    'entry_point': False,
+                    'exit_point': True,
+                    'return_point': False,
+                    'call_point': False,
+                    'auto_arrive_allowed_from': [2],
+                    'is_dead_end': False
+                }
+            },
+            {
+                'name': 'forget_password_init',
+                'restrictions': {
+                    'entry_point': False,
+                    'exit_point': False,
+                    'return_point': False,
+                    'call_point': False,
+                    'is_dead_end': False,
+                    'must_arrive_from': [0]
+                }
+            },
+            {
+                'name': 'forget_password_token_consumer',
+                'restrictions': {
+                    'entry_point': False,
+                    'exit_point': False,
+                    'return_point': False,
+                    'call_point': False,
+                    'is_dead_end': False,
+                    'auto_arrive_allowed_from': [4],
+                    'can_go_to': [6]
+                }
+            },
+            {
+                'name': 'forget_password',
+                'restrictions': {
+                    'entry_point': False,
+                    'exit_point': True,
+                    'return_point': False,
+                    'call_point': False,
+                    'is_dead_end': False,
+                    'must_arrive_from': [5]
+                }
+            }
+        ]
+    }]
 ]
 
 
@@ -180,7 +254,7 @@ class GenericWorkflowStackSession(object):
 
     SESSION_ENDPOINT_RESTRICTION_CALL_POINT_KEY = 'call_point'
 
-    SESSION_ENDPOINT_RESTRICTION_DIRECT_ACCESS_ALLOWED_KEY = 'direct_access_allowed'
+    SESSION_ENDPOINT_RESTRICTION_AUTO_ARRIVE_ALLOWED_FROM_KEY = 'auto_arrive_allowed_from'
 
     SESSION_ENDPOINT_RESTRICTION_ALLOWED_STORAGE_KEY = 'allowed_storage_keys'
 
@@ -253,7 +327,7 @@ class GenericWorkflowStackSession(object):
                         return False
                     if self.SESSION_ENDPOINT_RESTRICTION_RETURN_POINT_KEY not in restriction:
                         return False
-                    if self.SESSION_ENDPOINT_RESTRICTION_DIRECT_ACCESS_ALLOWED_KEY not in restriction:
+                    if self.SESSION_ENDPOINT_RESTRICTION_AUTO_ARRIVE_ALLOWED_FROM_KEY not in restriction:
                         return False
                     if self.SESSION_ENDPOINT_RESTRICTION_DEAD_END_KEY not in restriction:
                         return False
@@ -389,6 +463,30 @@ class GenericWorkflowStackSession(object):
             self._stack_session.delete_value_in_current_session(key)
         return
 
+    def auto_arrive_to_endpoint(self, endpoint_name):
+        current_position, current_session_index, current_endpoint_index = self._get_current_endpoint_index()
+        if current_position is None:
+            raise NoWorkFlowSessionEntered()
+
+        current_endpoint_session_name, current_endpoint_name, current_endpoint_restrictions = \
+            self._get_endpoint_info(current_position, current_session_index, current_endpoint_index)
+
+        position, session_index, next_endpoint_index = self._get_endpoint_index(current_endpoint_session_name,
+                                                                                endpoint_name)
+
+        if position is None:
+            raise InvalidArguments('Endpoint does not exist or it is not part of the current session')
+
+        _, _, next_endpoint_restrictions = self._get_endpoint_info(position, session_index, next_endpoint_index)
+        if next_endpoint_restrictions[self.SESSION_ENDPOINT_RESTRICTION_AUTO_ARRIVE_ALLOWED_FROM_KEY] is not None:
+            if current_endpoint_index not in \
+                   next_endpoint_restrictions[self.SESSION_ENDPOINT_RESTRICTION_AUTO_ARRIVE_ALLOWED_FROM_KEY]:
+                raise CannotEnterEndpoint('Endpoint does not allow auto arrive from current endpoint.')
+        else:
+            raise CannotEnterEndpoint('Auto arrive is not supported.')
+
+        self._stack_session.store_in_current_session(self.SESSION_STORAGE_ENDPOINT_KEY, next_endpoint_index)
+
     def go_to_endpoint(self, endpoint_name):
         current_position, current_session_index, current_endpoint_index = self._get_current_endpoint_index()
         if current_position is None:
@@ -400,12 +498,12 @@ class GenericWorkflowStackSession(object):
         position, session_index, next_endpoint_index = self._get_endpoint_index(current_endpoint_session_name,
                                                                                 endpoint_name)
         if position is None:
-            raise InvalidArguments()  # TODO: Raise proper error
+            raise InvalidArguments('Endpoint does not exist or it is not part of the current session')
         _, _, next_endpoint_restrictions = self._get_endpoint_info(position, session_index, next_endpoint_index)
 
         if not self._is_entering_to_endpoint_allowed(current_endpoint_index, current_endpoint_restrictions,
                                                      next_endpoint_index, next_endpoint_restrictions):
-            raise InvalidArguments()  # TODO: Raise proper error
+            raise CannotEnterEndpoint()
 
         self._stack_session.store_in_current_session(self.SESSION_STORAGE_ENDPOINT_KEY, next_endpoint_index)
 
