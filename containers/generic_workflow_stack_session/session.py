@@ -209,7 +209,7 @@ WORKFLOW_TEMPLATE = [
                 }
             },
             {
-                'name': 'forget_password',
+                'name': 'reset_password',
                 'restrictions': {
                     'entry_point': False,
                     'exit_point': True,
@@ -217,6 +217,35 @@ WORKFLOW_TEMPLATE = [
                     'call_point': False,
                     'is_dead_end': False,
                     'must_arrive_from': [5]
+                }
+            }
+        ]
+    }, {
+        'name': 'provider_class_google',
+        'restrictions': {
+            'allowed_argument_keys': [],
+            'allowed_return_value_keys': [],
+            'allowed_storage_keys': []
+        },
+        'endpoints': [
+            {
+                'name': 'oauth2_init',
+                'restrictions': {
+                    'entry_point': True,
+                    'exit_point': False,
+                    'return_point': False,
+                    'call_point': False,
+                    'is_dead_end': False
+                }
+            },
+            {
+                'name': 'oauth2_code',
+                'restrictions': {
+                    'entry_point': False,
+                    'exit_point': True,
+                    'return_point': False,
+                    'call_point': False,
+                    'is_dead_end': False
                 }
             }
         ]
