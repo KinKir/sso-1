@@ -24,8 +24,6 @@ WORKFLOW_TEMPLATE = [
                         'exit_point': False,
                         'return_point': False,
                         'call_point': True,
-                        'direct_access_allowed': True,
-                        'allowed_storage_keys': [],
                         'is_dead_end': False
                     }
                 },
@@ -36,8 +34,6 @@ WORKFLOW_TEMPLATE = [
                         'exit_point': True,
                         'return_point': True,
                         'call_point': False,
-                        'direct_access_allowed': False,
-                        'allowed_storage_keys': [],
                         'is_dead_end': False
                     }
                 }
@@ -86,7 +82,7 @@ WORKFLOW_TEMPLATE = [
                     'restrictions': {
                         'entry_point': True,
                         'exit_point': False,
-                        'return_point': False,
+                        'return_point': True,
                         'call_point': False,
                         'can_go_to': [1, 2],
                         'is_dead_end': False
@@ -308,6 +304,8 @@ class GenericWorkflowStackSession(object):
                     return False
 
                 endpoints = session[self.SESSION_ENDPOINT_KEY]
+                entry_endpoint_exists = False
+                exit_endpoint_exists = False
 
                 for endpoint in endpoints:
                     if self.SESSION_ENDPOINT_NAME_KEY not in endpoint:
@@ -331,6 +329,17 @@ class GenericWorkflowStackSession(object):
                         return False
                     if self.SESSION_ENDPOINT_RESTRICTION_DEAD_END_KEY not in restriction:
                         return False
+
+                    if restriction[self.SESSION_ENDPOINT_RESTRICTION_ENTRY_POINT_KEY]:
+                        entry_endpoint_exists = True
+                    if restriction[self.SESSION_ENDPOINT_RESTRICTION_EXIT_POINT_KEY]:
+                        exit_endpoint_exists = True
+
+                if not entry_endpoint_exists:
+                    return False
+
+                if not exit_endpoint_exists:
+                    return False
 
         return True
 
@@ -537,7 +546,7 @@ class GenericWorkflowStackSession(object):
         self._stack_session.set_arguments_for_current_session(recorded_args)
         self._stack_session.store_in_current_session(self.SESSION_STORAGE_ENDPOINT_KEY, next_endpoint_index)
 
-    def exit_session(self, return_values, is_error=False, error=None):
+    def exit_session(self, return_values, return_endpoint_name=None, is_error=False, error=None):
         if is_error and (error is None):
             raise InvalidArguments('if is_error is True, then error must not be None.')
 
@@ -560,7 +569,8 @@ class GenericWorkflowStackSession(object):
 
         previous_session_index = self._stack_session.get_current_session_id()
         previous_session_return_endpoint_index = self._get_return_endpoint_index_in_session(previous_position,
-                                                                                            previous_session_index)
+                                                                                            previous_session_index,
+                                                                                            return_endpoint_name)
         self._stack_session.store_in_current_session(self.SESSION_STORAGE_ENDPOINT_KEY,
                                                      previous_session_return_endpoint_index)
 
@@ -593,11 +603,26 @@ class GenericWorkflowStackSession(object):
 
         return True
 
-    def _get_return_endpoint_index_in_session(self, position, session_index):
+    def _get_return_endpoint_index_in_session(self, position, session_index, return_endpoint_name):
         _, _, endpoints = self._get_session_info(position, session_index)
+
+        name_match = True
+        if return_endpoint_name is not None:
+            name_match = False
+
         for i in range(0, len(endpoints)):
-            if endpoints[i][self.SESSION_ENDPOINT_RESTRICTION_KEY][self.SESSION_ENDPOINT_RESTRICTION_RETURN_POINT_KEY]:
-                return i
+
+            restrictions = endpoints[i][self.SESSION_ENDPOINT_RESTRICTION_KEY]
+
+            if endpoints[i][self.SESSION_ENDPOINT_NAME_KEY] == return_endpoint_name:
+                name_match = True
+
+            if name_match:
+                if restrictions[self.SESSION_ENDPOINT_RESTRICTION_RETURN_POINT_KEY]:
+                    return i
+                else:
+                    raise InvalidArguments('Preferred endpoint is not marked as return endpoint.')
+
         raise InvalidArguments('No return point in this session')
 
     def _is_entering_to_endpoint_allowed(self, current_endpoint_index, current_endpoint_restrictions,
