@@ -64,7 +64,7 @@ class GenericStackSession(GenericSession):
         self[self.STACK_ARCHIVE_KEY][str(current_position)] = self[self.STACK_STORAGE_KEY][str(current_position)]
         del self[self.STACK_STORAGE_KEY][str(current_position)]
         self[self.STACK_CURRENT_POSITION_KEY] -= 1
-        return self.STACK_CURRENT_POSITION_KEY
+        return self[self.STACK_CURRENT_POSITION_KEY]
 
     def _get_current_session(self):
         current_position = self[self.STACK_CURRENT_POSITION_KEY]

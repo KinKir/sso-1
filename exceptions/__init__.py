@@ -8,6 +8,7 @@ from exceptions.storage_key_not_allowed import StorageKeyNotAllowed
 from exceptions.invalid_workflow_template import InvalidWorkflowTemplate
 from exceptions.cannot_enter_session import CannotEnterSession
 from exceptions.cannot_enter_endpoint import CannotEnterEndpoint
+from exceptions.cannot_exit_session import CannotExitSession
 from exceptions.invalid_arguments import InvalidArguments
 from exceptions.unable_to_deserialize import UnableToDeserialize
 from exceptions.unable_to_serialize import UnableToSerialize
