@@ -41,7 +41,7 @@ class GenericWorkflowStackSession(object):
 
     SESSION_ENDPOINT_RESTRICTION_DEAD_END_KEY = 'is_dead_end'
 
-    SESSION_ENDPOINT_RESTRICTION_MUST_COME_FROM = 'must_come_from'
+    SESSION_ENDPOINT_RESTRICTION_MUST_COME_FROM = 'must_arrive_from'
 
     SESSION_ENDPOINT_RESTRICTION_CAN_GO_TO = 'can_go_to'
 
