@@ -1,0 +1,2 @@
+class CannotExitSession(Exception):
+    pass
