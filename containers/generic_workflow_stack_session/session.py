@@ -45,7 +45,7 @@ class GenericWorkflowStackSession(object):
 
     SESSION_ENDPOINT_RESTRICTION_CAN_GO_TO = 'can_go_to'
 
-    SESSION_STORAGE_ERROR_RETURN_VALUE_KEY = 'r_e'
+    SESSION_ERROR_RETURN_VALUE_KEY = 'r_e'
 
     SESSION_INDEX_KEY = 'index'
 
@@ -99,13 +99,9 @@ class GenericWorkflowStackSession(object):
                     return False, 'Session allowed storage keys key does not exists for position: %d ' \
                                   'and session: %d ' % (current_position, current_session)
 
-                if self.SESSION_STORAGE_ERROR_RETURN_VALUE_KEY in \
+                if self.SESSION_ERROR_RETURN_VALUE_KEY in \
                    session_restrictions[self.SESSION_ALLOWED_RETURN_VALUES_KEY]:
                     return False, 'Session allowed return keys have reserved key of error for position: %d ' \
-                                  'and session: %d ' % (current_position, current_session)
-                if self.SESSION_STORAGE_ERROR_RETURN_VALUE_KEY in \
-                   session_restrictions[self.SESSION_ALLOWED_STORAGE_KEY]:
-                    return False, 'Session allowed storage keys have reserved key of error for position: %d ' \
                                   'and session: %d ' % (current_position, current_session)
 
                 if self.SESSION_STORAGE_ENDPOINT_KEY in session_restrictions[self.SESSION_ALLOWED_STORAGE_KEY]:
@@ -298,8 +294,8 @@ class GenericWorkflowStackSession(object):
             raise NoWorkFlowSessionEntered()
 
         return_values = self._stack_session.get_previous_session_return_values()
-        if self.SESSION_STORAGE_ERROR_RETURN_VALUE_KEY in return_values:
-            return True, return_values[self.SESSION_STORAGE_ERROR_RETURN_VALUE_KEY]
+        if self.SESSION_ERROR_RETURN_VALUE_KEY in return_values:
+            return True, return_values[self.SESSION_ERROR_RETURN_VALUE_KEY]
 
         return False, return_values
 
@@ -422,7 +418,7 @@ class GenericWorkflowStackSession(object):
                                                      previous_session_return_endpoint_index)
 
         if is_error:
-            self._stack_session.set_previous_session_return_value({self.SESSION_STORAGE_ERROR_RETURN_VALUE_KEY: error})
+            self._stack_session.set_previous_session_return_value({self.SESSION_ERROR_RETURN_VALUE_KEY: error})
         else:
             self._stack_session.set_previous_session_return_value(recorded_return_values)
 
