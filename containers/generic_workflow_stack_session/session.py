@@ -45,7 +45,7 @@ class GenericWorkflowStackSession(object):
 
     SESSION_ENDPOINT_RESTRICTION_CAN_GO_TO = 'can_go_to'
 
-    SESSION_STORAGE_ERROR_RETURN_VALUE_KEY = 'r_e'
+    SESSION_ERROR_RETURN_VALUE_KEY = 'r_e'
 
     SESSION_INDEX_KEY = 'index'
 
@@ -68,7 +68,16 @@ class GenericWorkflowStackSession(object):
     def _is_workflow_template_valid(self, workflow_template):
         current_position = 0
         current_session = 0
+
+        if len(workflow_template) == 0:
+            return False, 'Workflow template cannot be empty array'
+
+        for i in range(0, len(workflow_template)):
+            if len(workflow_template[i]) == 0:
+                return False, 'Position %d contains empty array' % i
+
         for position in workflow_template:
+
             for session in position:
                 if self.SESSION_NAME_KEY not in session:
                     return False, 'Session name does not exists for position: %d and session: %d ' % \
@@ -90,13 +99,9 @@ class GenericWorkflowStackSession(object):
                     return False, 'Session allowed storage keys key does not exists for position: %d ' \
                                   'and session: %d ' % (current_position, current_session)
 
-                if self.SESSION_STORAGE_ERROR_RETURN_VALUE_KEY in \
+                if self.SESSION_ERROR_RETURN_VALUE_KEY in \
                    session_restrictions[self.SESSION_ALLOWED_RETURN_VALUES_KEY]:
                     return False, 'Session allowed return keys have reserved key of error for position: %d ' \
-                                  'and session: %d ' % (current_position, current_session)
-                if self.SESSION_STORAGE_ERROR_RETURN_VALUE_KEY in \
-                   session_restrictions[self.SESSION_ALLOWED_STORAGE_KEY]:
-                    return False, 'Session allowed storage keys have reserved key of error for position: %d ' \
                                   'and session: %d ' % (current_position, current_session)
 
                 if self.SESSION_STORAGE_ENDPOINT_KEY in session_restrictions[self.SESSION_ALLOWED_STORAGE_KEY]:
@@ -169,6 +174,12 @@ class GenericWorkflowStackSession(object):
                 current_session += 1
 
             current_position += 1
+
+        first_sessions = workflow_template[0]
+        for first_session in first_sessions:
+            session_restrictions = first_session[self.SESSION_RESTRICTIONS_KEY]
+            if len(session_restrictions[self.SESSION_ALLOWED_RETURN_VALUES_KEY]) != 0:
+                return False, 'Sessions at first position cannot have allowed return value keys'
 
         return True, None
 
@@ -281,31 +292,19 @@ class GenericWorkflowStackSession(object):
         current_position, current_session_index = self._get_current_session_index()
         if current_position is None:
             raise NoWorkFlowSessionEntered()
-        error_value = self._stack_session.get_current_session_storage_value(self.SESSION_STORAGE_ERROR_RETURN_VALUE_KEY)
-        if error_value is not None:
-            return True, error_value
-        _, session_restrictions, _ = self._get_session_info(current_position, current_session_index)
 
-        recorded_return_values = {}
-        for key in session_restrictions[self.SESSION_ALLOWED_RETURN_VALUES_KEY]:
-            recorded_return_values[key] = self._stack_session.get_current_session_storage_value(key)
+        return_values = self._stack_session.get_previous_session_return_values()
+        if self.SESSION_ERROR_RETURN_VALUE_KEY in return_values:
+            return True, return_values[self.SESSION_ERROR_RETURN_VALUE_KEY]
 
-        return False, recorded_return_values
+        return False, return_values
 
     def remove_previous_session_return_value(self):
         current_position, current_session_index = self._get_current_session_index()
         if current_position is None:
             raise NoWorkFlowSessionEntered()
 
-        error_value = self._stack_session.get_current_session_storage_value(self.SESSION_STORAGE_ERROR_RETURN_VALUE_KEY)
-        if error_value is not None:
-            self._stack_session.delete_value_in_current_session(self.SESSION_STORAGE_ERROR_RETURN_VALUE_KEY)
-            return
-
-        _, session_restrictions, _ = self._get_session_info(current_position, current_session_index)
-        for key in session_restrictions[self.SESSION_ALLOWED_RETURN_VALUES_KEY]:
-            self._stack_session.delete_value_in_current_session(key)
-        return
+        self._stack_session.clear_previous_session_return_value()
 
     def auto_arrive_to_endpoint(self, endpoint_name):
         current_position, current_session_index, current_endpoint_index = self._get_current_endpoint_index()
@@ -372,7 +371,7 @@ class GenericWorkflowStackSession(object):
         _, next_session_restrictions, _ = self._get_session_info(next_position, next_session_index)
 
         recorded_args = {}
-        for arg_key in next_session_restrictions[self.SESSION_ALLOWED_STORAGE_KEY]:
+        for arg_key in next_session_restrictions[self.SESSION_ALLOWED_ARGS_KEY]:
             if arg_key not in args:
                 raise ArgKeyNotPresent(arg_key)
             recorded_args[arg_key] = args[arg_key]
@@ -381,9 +380,12 @@ class GenericWorkflowStackSession(object):
         self._stack_session.set_arguments_for_current_session(recorded_args)
         self._stack_session.store_in_current_session(self.SESSION_STORAGE_ENDPOINT_KEY, next_endpoint_index)
 
-    def exit_session(self, return_values, return_endpoint_name=None, is_error=False, error=None):
+    def exit_session(self, return_values, return_endpoint_name, is_error=False, error=None):
         if is_error and (error is None):
             raise InvalidArguments('if is_error is True, then error must not be None.')
+
+        if return_endpoint_name is None:
+            raise InvalidArguments('Return endpoint name is compulsory.')
 
         current_position, current_session_index, current_endpoint_index = self._get_current_endpoint_index()
         if current_position is None:
@@ -416,11 +418,9 @@ class GenericWorkflowStackSession(object):
                                                      previous_session_return_endpoint_index)
 
         if is_error:
-            self._stack_session.store_in_current_session(self.SESSION_STORAGE_ERROR_RETURN_VALUE_KEY, error)
+            self._stack_session.set_previous_session_return_value({self.SESSION_ERROR_RETURN_VALUE_KEY: error})
         else:
-            for recorded_return_value_key in recorded_return_values:
-                self._stack_session.store_in_current_session(recorded_return_value_key,
-                                                             recorded_return_values[recorded_return_value_key])
+            self._stack_session.set_previous_session_return_value(recorded_return_values)
 
     def _is_entering_to_session_allowed(self, current_position, current_endpoint_restrictions, next_position,
                                         next_endpoint_restriction):
@@ -476,9 +476,6 @@ class GenericWorkflowStackSession(object):
         if must_come_from is not None:
             if current_endpoint_index not in must_come_from:
                 return False
-
-        if next_endpoint_restrictions[self.SESSION_ENDPOINT_RESTRICTION_EXIT_POINT_KEY]:
-            return False
 
         return True
 

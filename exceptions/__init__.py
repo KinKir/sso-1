@@ -10,5 +10,6 @@ from exceptions.cannot_enter_session import CannotEnterSession
 from exceptions.cannot_enter_endpoint import CannotEnterEndpoint
 from exceptions.cannot_exit_session import CannotExitSession
 from exceptions.invalid_arguments import InvalidArguments
+from exceptions.invalid_operation import InvalidOperation
 from exceptions.unable_to_deserialize import UnableToDeserialize
 from exceptions.unable_to_serialize import UnableToSerialize
