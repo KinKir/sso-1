@@ -5,6 +5,7 @@ from containers.generic_session.session import GenericSession
 from exceptions import UnableToDeserialize
 from exceptions import UnableToSerialize
 from exceptions import InvalidArguments
+from exceptions import InvalidOperation
 
 from containers.generic_session.coder import Coder
 from containers.generic_session.cryptor import Cryptor
@@ -26,6 +27,8 @@ class GenericStackSession(GenericSession):
     SESSION_STORAGE_KEY = 's'
 
     SESSION_ARGUMENTS_KEY = 'a'
+
+    SESSION_PREVIOUS_SESSION_RETURN_VALUE_KEY = 'r'
 
     def __init__(self, stack_id, dictionary=None):
         if dictionary is None:
@@ -52,7 +55,8 @@ class GenericStackSession(GenericSession):
         self[self.STACK_STORAGE_KEY][str(current_position + 1)] = {
             self.SESSION_ARGUMENTS_KEY: {},
             self.SESSION_ID_KEY: sid,
-            self.SESSION_STORAGE_KEY: {}
+            self.SESSION_STORAGE_KEY: {},
+            self.SESSION_PREVIOUS_SESSION_RETURN_VALUE_KEY: {}
         }
         self[self.STACK_CURRENT_POSITION_KEY] += 1
         return self[self.STACK_CURRENT_POSITION_KEY]
@@ -108,16 +112,41 @@ class GenericStackSession(GenericSession):
             arg_container[key] = current_session[self.SESSION_ARGUMENTS_KEY][key]
         return arg_container
 
+    def get_previous_session_return_values(self):
+        current_session = self._get_current_session()
+        if current_session is None:
+            return None
+
+        return_val_container = {}
+        for key in current_session[self.SESSION_PREVIOUS_SESSION_RETURN_VALUE_KEY]:
+            return_val_container[key] = current_session[self.SESSION_PREVIOUS_SESSION_RETURN_VALUE_KEY][key]
+        return return_val_container
+
+    def clear_previous_session_return_value(self):
+        current_session = self._get_current_session()
+        if current_session is None:
+            raise InvalidOperation('No session is pushed yet.')
+
+        current_session[self.SESSION_PREVIOUS_SESSION_RETURN_VALUE_KEY] = {}
+
+    def set_previous_session_return_value(self, return_values):
+        current_session = self._get_current_session()
+        if current_session is None:
+            raise InvalidOperation('No session is pushed yet.')
+
+        for key in return_values:
+            current_session[self.SESSION_PREVIOUS_SESSION_RETURN_VALUE_KEY][key] = return_values[key]
+
     def store_in_current_session(self, key, value):
         session = self._get_current_session()
         if session is None:
-            return None
+            raise InvalidOperation('No session is pushed yet.')
         session[self.SESSION_STORAGE_KEY][key] = value
 
     def delete_value_in_current_session(self, key):
         session = self._get_current_session()
         if session is None:
-            return None
+            raise InvalidOperation('No session is pushed yet.')
         if session[self.SESSION_STORAGE_KEY].get(key) is None:
             return False
         del session[self.SESSION_STORAGE_KEY][key]
@@ -126,7 +155,7 @@ class GenericStackSession(GenericSession):
     def set_arguments_for_current_session(self, args):
         session = self._get_current_session()
         if session is None:
-            return None
+            raise InvalidOperation('No session is pushed yet.')
         for arg_key in args:
             session[self.SESSION_ARGUMENTS_KEY][arg_key] = args[arg_key]
 
